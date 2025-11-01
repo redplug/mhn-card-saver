@@ -96,12 +96,18 @@ export async function GET(request: Request) {
     } catch (waitError) {
       // 5초간 기다려도 요소를 찾지 못하면, 선택자가 깨졌거나 페이지가 잘못된 것.
       console.error(`Failed to find element with selector: ${endSelector}`);
+      const debugBuffer = await page.screenshot({ type: 'png', encoding: 'base64' });
+      await browser.close(); // 브라우저 닫기
+
       const errorMessage = waitError instanceof Error ? waitError.message : String(waitError);
       
-      // 'unknown' 타입 오류 방지
-      if (browser) await browser.close();
+      // 500 에러를 반환하되, 디버그 스크린샷을 JSON에 포함시킵니다.
       return NextResponse.json(
-        { error: 'Failed to find screenshot element (timeout)', details: errorMessage },
+        { 
+          error: `Waiting for selector \`${endSelector}\` failed`, 
+          details: errorMessage,
+          debugScreenshotBase64: debugBuffer // 디버그 스크린샷 첨부
+        },
         { status: 500 }
       );
     }
