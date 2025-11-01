@@ -1,6 +1,6 @@
 'use client'; 
 
-import { useState, useEffect, FormEvent, useCallback } from 'react';
+import { useState, useEffect, FormEvent, useCallback, useRef } from 'react'; // useRef 추가
 import Card from '@/components/Card';
 
 export type CardType = {
@@ -10,59 +10,85 @@ export type CardType = {
   name: string;
 };
 
+// --- [추가] 검색 아이콘 ---
+const SearchIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.197 5.197a7.5 7.5 0 0 0 10.607 10.607Z" />
+  </svg>
+);
+
 // --- [분리] ClientForm에 필요한 Props 정의 ---
 interface ClientFormProps {
   urlInput: string;
-  searchTerm: string;
+  searchKeyword: string; // 필터링에 사용될 최종 검색 키워드
   isLoading: boolean;
-  // 핸들러 함수들은 useCallback으로 감싸져 props로 전달됩니다.
   handleAddCard: (e: React.FormEvent<HTMLFormElement>) => void;
+  handleSearch: () => void; // 검색 버튼 클릭 핸들러
   setUrlInput: (value: string) => void;
-  setSearchTerm: (value: string) => void;
+  searchRef: React.RefObject<HTMLInputElement>; // Ref 객체
 }
 
-// --- [분리] ClientForm 컴포넌트 정의 (Home 함수 밖으로 이동) ---
+// --- [분리] ClientForm 컴포넌트 정의 ---
 const ClientForm = ({
   urlInput,
-  searchTerm,
   isLoading,
   handleAddCard,
+  handleSearch,
   setUrlInput,
-  setSearchTerm,
-}: ClientFormProps) => (
-  <>
-    {/* URL 입력 폼 */}
-    <form onSubmit={handleAddCard} className="flex gap-2 mb-8">
-      <input
-        type="url"
-        value={urlInput}
-        onChange={(e) => setUrlInput(e.target.value)}
-        placeholder="https://mhn.quest 빌드 링크를 붙여넣으세요"
-        className="flex-grow border p-3 rounded-lg"
-        required
-      />
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-600 disabled:bg-gray-400"
-      >
-        {isLoading ? '생성 중...' : '추가'}
-      </button>
-    </form>
-    
-    {/* 검색 입력창 (여기가 문제의 입력창입니다) */}
-    <div className="mb-8">
-      <input
-        type="text"
-        value={searchTerm}
-        // [핵심] 상태 setter 함수를 직접 사용하여 단순화 (불필요한 로직 제거)
-        onChange={(e) => setSearchTerm(e.target.value)} 
-        placeholder="빌드명으로 검색하세요..."
-        className="w-full border p-3 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-      />
-    </div>
-  </>
-);
+  searchRef,
+}: ClientFormProps) => {
+
+  // 검색 입력 필드에서 Enter 키를 눌렀을 때 검색 실행
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault(); // 기본 폼 제출 방지
+      handleSearch();
+    }
+  };
+
+  return (
+    <>
+      {/* URL 입력 폼 */}
+      <form onSubmit={handleAddCard} className="flex gap-2 mb-8">
+        <input
+          type="url"
+          value={urlInput}
+          onChange={(e) => setUrlInput(e.target.value)}
+          placeholder="https://mhn.quest 빌드 링크를 붙여넣으세요"
+          className="flex-grow border p-3 rounded-lg"
+          required
+        />
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-600 disabled:bg-gray-400"
+        >
+          {isLoading ? '생성 중...' : '추가'}
+        </button>
+      </form>
+      
+      {/* ⬇️ [수정] 검색 입력창 및 버튼 ⬇️ */}
+      <div className="mb-8 flex gap-2">
+        <input
+          type="text"
+          ref={searchRef} // 1. Ref 연결 (비제어 컴포넌트)
+          onKeyDown={handleKeyDown} // 2. Enter 키 감지
+          placeholder="빌드명으로 검색하세요..."
+          className="w-full border p-3 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+        />
+        <button
+          type="button"
+          onClick={handleSearch}
+          className="bg-gray-700 text-white px-4 py-3 rounded-lg font-semibold hover:bg-gray-800"
+          aria-label="검색 실행"
+        >
+          <SearchIcon />
+        </button>
+      </div>
+      {/* ⬆️ 검색 입력창 및 버튼 끝 ⬆️ */}
+    </>
+  );
+};
 
 
 // --- Home 컴포넌트 (메인) ---
@@ -72,71 +98,67 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [cards, setCards] = useState<CardType[]>([]);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const [searchTerm, setSearchTerm] = useState(""); 
-  const [isClient, setIsClient] = useState(false); // 클라이언트 렌더링 확인
+  
+  // 1. [수정] 검색에 사용될 최종 키워드 상태
+  const [searchKeyword, setSearchKeyword] = useState(""); 
+  const [isClient, setIsClient] = useState(false); 
+  
+  // 2. [추가] 검색 입력 필드의 값을 읽기 위한 Ref
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // --- 파생 상태 (DERIVED STATE) ---
   const filteredCards = cards.filter(card => 
-    card.name.toLowerCase().includes(searchTerm.toLowerCase())
+    // 필터링은 searchKeyword 상태를 사용합니다.
+    searchKeyword === "" || card.name.toLowerCase().includes(searchKeyword.toLowerCase())
   );
 
-  // --- DB 로드 (EFFECT) ---
+  // --- 검색 핸들러 (버튼 클릭 시 실행) ---
+  const handleSearch = useCallback(() => {
+    // 1. Ref에서 현재 입력된 값을 가져와서
+    const currentInput = searchInputRef.current?.value || "";
+    // 2. 검색 키워드 상태를 업데이트합니다. (이때만 리렌더링 발생)
+    setSearchKeyword(currentInput.trim());
+  }, []); // 의존성 없음 (Ref를 사용하므로)
+
+  // --- DB 로드, DB 저장 (EFFECT) ---
   useEffect(() => {
     setIsClient(true);
     async function loadCards() {
-      console.log("--- [Client] loadCards: 카드 불러오기 시작...");
+      // ... (DB 로직은 동일)
       try {
         const res = await fetch('/api/cards');
-        if (!res.ok) {
-          throw new Error(`API가 에러를 반환했습니다: ${res.status}`);
-        }
+        if (!res.ok) { throw new Error(`API가 에러를 반환했습니다: ${res.status}`); }
         const data = await res.json();
         setCards(data);
-        console.log(`--- [Client] loadCards: 카드 ${data.length}개 불러오기 성공.`);
       } catch (error) {
         console.error("--- [Client] loadCards 실패:", error);
         alert(`[로드 실패] 카드 목록을 불러오는 데 실패했습니다: ${error.message}`);
       }
       setIsInitialLoad(false);
     }
-    
     loadCards();
   }, []);
 
-  // --- DB 저장 (EFFECT) ---
   useEffect(() => {
-    if (isInitialLoad) {
-      return; 
-    }
-    
+    if (isInitialLoad) { return; }
     async function saveCardsToDB() {
-      console.log(`--- [Client] saveCardsToDB: 카드 ${cards.length}개 저장 시도...`);
+      // ... (DB 저장 로직은 동일)
       try {
-        const res = await fetch('/api/cards', {
-          method: 'POST', 
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(cards), 
-        });
-        if (!res.ok) {
-          throw new Error(`API가 에러를 반환했습니다: ${res.status}`);
-        }
-        console.log("--- [Client] saveCardsToDB: 저장 성공.");
+        const res = await fetch('/api/cards', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cards) });
+        if (!res.ok) { throw new Error(`API가 에러를 반환했습니다: ${res.status}`); }
       } catch (error) {
         console.error("--- [Client] saveCardsToDB 실패:", error);
         alert(`[저장 실패] 카드 목록을 저장하는 데 실패했습니다: ${error.message}`);
       }
     }
-    
     saveCardsToDB();
-    
   }, [cards, isInitialLoad]);
 
-  // --- 카드 추가 핸들러 (useCallback으로 감싸기) ---
+  // --- 카드 추가 핸들러 ---
   const handleAddCard = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!urlInput) return;
 
-    // 1. 중복 체크 로직
     const isDuplicate = cards.some(card => card.url === urlInput);
     if (isDuplicate) {
       alert("이미 추가된 빌드 주소입니다! 중복된 주소는 추가할 수 없습니다.");
@@ -147,24 +169,15 @@ export default function Home() {
     setIsLoading(true);
 
     try {
-      // 2. 스크린샷 API 호출
       const res = await fetch(`/api/screenshot?url=${encodeURIComponent(urlInput)}`);
-
       if (!res.ok) {
         const errorData = await res.json();
         
-        // 디버그 스크린샷 카드 생성 (스크린샷 실패 시)
         if (errorData.debugScreenshotBase64) {
-          const errorCard: CardType = {
-            id: Date.now(),
-            url: urlInput,
-            screenshot: `data:image/png;base64,${errorData.debugScreenshotBase64}`,
-            name: "⚠️ 스크린샷 실패 (디버그 화면)"
-          };
-          // [핵심] 함수형 업데이트 사용
-          setCards(prevCards => [errorCard, ...prevCards]); 
+          const errorCard: CardType = { id: Date.now(), url: urlInput, screenshot: `data:image/png;base64,${errorData.debugScreenshotBase64}`, name: "⚠️ 스크린샷 실패 (디버그 화면)" };
+          setCards(prevCards => [errorCard, ...prevCards]);
           setIsLoading(false);
-          alert(`오류: 스크린샷 영역을 찾지 못했습니다. 무엇이 보이는지 디버그 카드를 확인해주세요.`);
+          alert(`오류: 스크린샷 영역을 찾지 못했습니다. 디버그 카드를 확인해주세요.`);
           return;
         }
 
@@ -173,16 +186,9 @@ export default function Home() {
       }
 
       const data = await res.json();
-
       if (data.screenshotBase64) {
-        const newCard: CardType = {
-          id: Date.now(),
-          url: urlInput,
-          screenshot: `data:image/png;base64,${data.screenshotBase64}`, 
-          name: "새 빌드",
-        };
-        // [핵심] 함수형 업데이트 사용
-        setCards(prevCards => [newCard, ...prevCards]); 
+        const newCard: CardType = { id: Date.now(), url: urlInput, screenshot: `data:image/png;base64,${data.screenshotBase64}`, name: "새 빌드" };
+        setCards(prevCards => [newCard, ...prevCards]);
         setUrlInput("");
       }
 
@@ -193,23 +199,21 @@ export default function Home() {
     }
 
     setIsLoading(false);
-  }, [urlInput, cards]); // 의존성: urlInput, cards
+  }, [urlInput, cards]);
 
   // --- 카드 수정/삭제 핸들러 ---
   const handleDeleteCard = useCallback((id: number) => {
     const isConfirmed = window.confirm(`정말로 이 빌드를 삭제하시겠습니까?`);
     if (isConfirmed) {
-      // [핵심] 함수형 업데이트 사용
       setCards(prevCards => prevCards.filter(card => card.id !== id));
     }
-  }, []); // 의존성 없음
+  }, []);
 
   const handleNameChange = useCallback((id: number, newName: string) => {
-    // [핵심] 함수형 업데이트 사용
     setCards(prevCards => prevCards.map(card => 
       card.id === id ? { ...card, name: newName } : card
     ));
-  }, []); // 의존성 없음
+  }, []);
   
   // --- 최종 렌더링 (RETURN) ---
   return (
@@ -223,11 +227,12 @@ export default function Home() {
       {isClient ? 
         <ClientForm 
           urlInput={urlInput}
-          searchTerm={searchTerm}
+          searchKeyword={searchKeyword}
           isLoading={isLoading}
           handleAddCard={handleAddCard}
+          handleSearch={handleSearch}
           setUrlInput={setUrlInput}
-          setSearchTerm={setSearchTerm}
+          searchRef={searchInputRef} // Ref 전달
         /> 
         : (
         <div className="h-24 mb-8 flex justify-center items-center text-gray-500">
@@ -244,7 +249,7 @@ export default function Home() {
           </p>
         )}
 
-        {/* 🚨 [최적화] 카드 목록 또는 빈 목록 메시지를 렌더링합니다. */}
+        {/* 🚨 필터링된 카드 목록 렌더링 */}
         {filteredCards.length > 0 ? (
           filteredCards.map(card => (
             <Card
@@ -261,7 +266,7 @@ export default function Home() {
               <p className="text-center text-gray-500">아직 추가된 빌드가 없습니다.</p>
             ) : (
               !isLoading && (
-                <p className="text-center text-gray-500">'{searchTerm}'에 해당하는 빌드를 찾을 수 없습니다.</p>
+                <p className="text-center text-gray-500">'{searchKeyword}'에 해당하는 빌드를 찾을 수 없습니다.</p>
               )
             )}
           </div>
