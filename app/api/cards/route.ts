@@ -1,6 +1,6 @@
 // app/api/cards/route.ts
 
-import { Redis } from '@vercel/kv';
+import { createClient } from '@vercel/kv';
 import { NextResponse } from 'next/server';
 
 // 2. [추가] 환경 변수에서 KV_URL을 가져옵니다.
@@ -9,7 +9,7 @@ const redisUrl = process.env.KV_URL;
 // 3. [추가] KV_URL이 없으면 오류를 방지하고, 있으면 Redis 객체를 TCP 모드로 생성합니다.
 //    (이 방법이 KV_REST_API_* 변수를 완전히 무시하도록 강제합니다.)
 const kv = redisUrl
-  ? new Redis({ url: redisUrl }) 
+  ? createClient({ url: redisUrl }) 
   : { 
       // KV_URL이 없을 때의 더미 객체 (실패 로직을 위해)
       get: async () => { throw new Error('KV_URL 환경 변수가 설정되지 않았습니다.'); },
