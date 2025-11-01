@@ -62,48 +62,52 @@ export async function GET(request: Request) {
     
     await page.goto(url, { waitUntil: 'networkidle0' });
 
-    // ❗️ [중요] 스크린샷을 시작할 요소와 끝낼 요소의 CSS 선택자를 직접 찾아야 합니다.
-    // 아래는 예시이며, 실제 mhn.quest 페이지에서 개발자 도구로 찾아야 합니다.
-    const startSelector = '#app > div.main.ko.svelte-1oecyh1 > div:nth-child(6)'; // 예: '장비' 또는 '스탯' 영역의 선택자
-    const endSelector = '#app > div.main.ko.svelte-1oecyh1 > div.drift-buff.mobile.svelte-1oecyh1';   // 예: '스킬 테이블' 영역의 선택자
+    // ❗️ [중요] 이 선택자들은 mhn.quest 사이트가 업데이트되면 또 실패할 수 있습니다.
+    // 더 안정적인 ID(#)나 고유 클래스(예: .stat-group)를 찾는 것이 좋습니다.
+    const startSelector = '#app > div.main.ko.svelte-1oecyh1 > div:nth-child(6)';
+    const endSelector = '#app > div.main.ko.svelte-1oecyh1 > div.drift-buff.mobile.svelte-1oecyh1';
 
-    // 2. 각 요소를 찾습니다.
+    try {
+      // 1. [추가] 끝 요소가 렌더링될 때까지 최대 5초간 기다립니다.
+      // (이것이 타이밍 문제를 해결해 줄 것입니다.)
+      await page.waitForSelector(endSelector, { timeout: 5000 });
+    } catch (waitError) {
+      // 5초간 기다려도 요소를 찾지 못하면, 선택자가 깨졌거나 페이지가 잘못된 것.
+      console.error(`Failed to find element with selector: ${endSelector}`);
+      const errorMessage = waitError instanceof Error ? waitError.message : String(waitError);
+      
+      // 'unknown' 타입 오류 방지
+      if (browser) await browser.close();
+      return NextResponse.json(
+        { error: 'Failed to find screenshot element (timeout)', details: errorMessage },
+        { status: 500 }
+      );
+    }
+
+    // 2. 각 요소를 찾습니다. (이제 확실히 존재함)
     const startElement = await page.$(startSelector);
     const endElement = await page.$(endSelector);
 
     let buffer;
 
-    // 3. 두 요소가 모두 존재할 때만 영역 계산을 실행합니다.
+    // 3. 두 요소가 모두 존재할 때만 영역 계산
     if (startElement && endElement) {
-      // 4. 각 요소의 위치와 크기 정보를 가져옵니다.
+      // ... (boundingBox 및 clip 계산 로직은 동일)
       const startBox = await startElement.boundingBox();
       const endBox = await endElement.boundingBox();
 
       if (startBox && endBox) {
-        // 5. 스크린샷을 찍을 '사각형(clip)' 영역을 계산합니다.
         const clip = {
-          x: startBox.x, // 시작 요소의 x 좌표
-          y: startBox.y, // 시작 요소의 y 좌표
-          width: startBox.width, // 너비는 시작 요소를 따름 (모바일이라 동일)
-          
-          // 높이 = (끝 요소의 바닥 y좌표) - (시작 요소의 맨 위 y좌표)
+          x: startBox.x,
+          y: startBox.y,
+          width: startBox.width,
           height: (endBox.y + endBox.height) - startBox.y
         };
-
-        // 6. 계산된 영역(clip)으로 스크린샷을 찍습니다.
-        buffer = await page.screenshot({
-          type: 'png',
-          encoding: 'base64',
-          clip: clip
-        });
+        buffer = await page.screenshot({ type: 'png', encoding: 'base64', clip: clip });
       } else {
-        // 요소는 찾았으나 좌표 계산에 실패하면 전체 스크린샷
-        console.warn('Could not get bounding box. Taking full page screenshot.');
         buffer = await page.screenshot({ type: 'png', encoding: 'base64' });
       }
     } else {
-      // 시작 또는 끝 요소를 찾지 못하면 전체 스크린샷
-      console.warn(`Could not find start ('${startSelector}') or end ('${endSelector}') element. Taking full page screenshot.`);
       buffer = await page.screenshot({ type: 'png', encoding: 'base64' });
     }
 
