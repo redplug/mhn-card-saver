@@ -40,6 +40,25 @@ export async function GET(request: Request) {
     });
 
     const page = await browser.newPage();
+
+    // --- ⬇️ [핵심 디버깅 코드 추가] ⬇️ ---
+    
+    // 1. 브라우저 콘솔 로그를 서버 터미널에 출력
+    page.on('console', (msg) => {
+      console.log(`[PAGE CONSOLE] ${msg.type().toUpperCase()}: ${msg.text()}`);
+    });
+
+    // 2. 페이지 에러/크래시 이벤트를 서버 터미널에 출력
+    page.on('pageerror', (err) => {
+      console.error(`[PAGE ERROR] ${err.message}`);
+    });
+    
+    // 3. 페이지가 요청을 실패할 때 네트워크 에러를 기록
+    page.on('requestfailed', (request) => {
+      console.error(`[NET ERROR] ${request.failure()?.errorText}: ${request.url()}`);
+    });
+    
+    // --- ⬆️ 디버깅 코드 끝 ⬆️ ---
     
     // 2. 언어 및 뷰포트 설정
     await page.setUserAgent(MOBILE_USER_AGENT); 
