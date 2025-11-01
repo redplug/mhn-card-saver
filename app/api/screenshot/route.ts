@@ -90,7 +90,7 @@ export async function GET(request: Request) {
     try {
       // 1. [추가] 끝 요소가 렌더링될 때까지 최대 5초간 기다립니다.
       // (이것이 타이밍 문제를 해결해 줄 것입니다.)
-      await page.waitForSelector(endSelector, { timeout: 5000 });
+      await page.waitForSelector(endSelector, { timeout: 10000 });
     } catch (waitError) {
       // 5초간 기다려도 요소를 찾지 못하면, 선택자가 깨졌거나 페이지가 잘못된 것.
       console.error(`Failed to find element with selector: ${endSelector}`);
