@@ -87,7 +87,7 @@ export async function GET(request: Request) {
     // ❗️ [중요] 이 선택자들은 mhn.quest 사이트가 업데이트되면 또 실패할 수 있습니다.
     // 더 안정적인 ID(#)나 고유 클래스(예: .stat-group)를 찾는 것이 좋습니다.
 
-    const KOREAN_BUTTON_SELECTOR = '#app > div.settings.svelte-ghcjle > div > div > select > option:nth-child(4)'; // 예: '#app > header > button.lang-ko'
+    const KOREAN_BUTTON_SELECTOR = 'div.settings.svelte-ghcjle > div > div > select > option:nth-child(4)'; // 예: '#app > header > button.lang-ko'
 
     const startSelector = 'div.main.ko';
     const endSelector = 'div.main.ko';
