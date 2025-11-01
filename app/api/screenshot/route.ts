@@ -105,12 +105,15 @@ export async function GET(request: Request) {
       //    (visible: true 대신 'visible' 속성을 사용하며, timeout은 30초)
       await page.waitForSelector(KOREAN_DROPDOWN_SELECTOR, { timeout: 30000, visible: true });
       
-      // 2. [수정] select 실행 전에 500ms 딜레이를 추가합니다. (안전장치)
-      await page.waitForTimeout(5000); 
-
-      // 3. select 실행 (페이지 재로딩 대기 없음)
-      await page.select(KOREAN_DROPDOWN_SELECTOR, KOREAN_LANG_VALUE);
+      // 2. [핵심 수정] select()를 사용해 드롭다운 값을 변경하고, 페이지 재로딩을 기다립니다.
+      const selectAndReload = Promise.all([
+          // 페이지 재로딩 대기
+          page.waitForNavigation({ waitUntil: 'networkidle0' }), 
+          // 드롭다운 요소에서 'ko' 값을 선택
+          page.select(KOREAN_DROPDOWN_SELECTOR, KOREAN_LANG_VALUE) 
+      ]);
       
+      await selectAndReload; // 선택 및 재로딩 완료 대기
       // 4. [수정] select 후, 컨텐츠 로딩 시간을 2초로 늘립니다.
       await page.waitForTimeout(5000); 
       
