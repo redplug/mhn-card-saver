@@ -62,7 +62,7 @@ export async function GET(request: Request) {
       
       const clickAndReload = Promise.all([
           page.waitForNavigation({ waitUntil: 'networkidle0' }), // 페이지 재로딩을 기다림
-          page.click(KOREAN_BUTTON_SELECTOR)
+          page.click(KOREAN_BUTTON_SELECTOR),
           page.click(KOREAN_BUTTON)                      // 클릭을 실행
       ]);
       
