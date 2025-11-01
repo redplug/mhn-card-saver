@@ -88,7 +88,7 @@ export async function GET(request: Request) {
     
     // 2. 언어 및 뷰포트 설정
     await page.setUserAgent(MOBILE_USER_AGENT); 
-    await page.setViewport({ width: 390, height: 844, isMobile: true });
+    await page.setViewport({ width: 390, height: 844, isMobile: true, deviceScaleFactor: 2 });
     
     // 한국어 선호 헤더 추가
     await page.setExtraHTTPHeaders({
