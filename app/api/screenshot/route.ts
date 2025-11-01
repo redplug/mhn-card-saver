@@ -94,9 +94,9 @@ export async function GET(request: Request) {
     });
     
     await page.goto(url, { 
-      waitUntil: 'networkidle0', 
+      waitUntil: 'networkidle2', 
       referrer: 'https://www.google.com/', 
-      timeout: 60000,
+      timeout: 30000,
     });
 
     // 3. 한국어 버튼 클릭 및 컨텐츠 대기
@@ -107,7 +107,7 @@ export async function GET(request: Request) {
       // 2. [핵심 수정] select()를 사용해 드롭다운 값을 변경하고, 페이지 재로딩을 기다립니다.
       const selectAndReload = Promise.all([
           // 페이지 재로딩 대기
-          page.waitForNavigation({ waitUntil: 'networkidle0' }), 
+          page.waitForNavigation({ waitUntil: 'networkidle2' }), 
           // 드롭다운 요소에서 'ko' 값을 선택
           page.select(KOREAN_DROPDOWN_SELECTOR, KOREAN_LANG_VALUE) 
       ]);
@@ -116,7 +116,7 @@ export async function GET(request: Request) {
       
       // 3. 이제 페이지가 한국어로 완전히 로드되었으므로,
       //    스크린샷 끝 요소가 렌더링될 때까지 기다립니다.
-      await page.waitForSelector(END_SELECTOR, { timeout: 5000 });
+      await page.waitForSelector(END_SELECTOR, { timeout: 30000 });
 
     } catch (waitError) {
       // 10초 내에 버튼 클릭이나 컨텐츠 로드에 실패한 경우
