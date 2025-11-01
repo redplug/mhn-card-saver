@@ -47,6 +47,11 @@ export default function Home() {
       if (!res.ok) {
         // API가 실패하면, API가 보낸 JSON 에러 메시지를 읽습니다.
         const errorData = await res.json();
+
+        const message = errorData.error || errorData.details || '스크린샷 생성에 실패했습니다.';
+        throw new Error(message);
+
+        const data = await res.json();
         // API의 catch 블록에 있는 'details' 메시지를 가져옵니다.
         throw new Error(errorData.details || '스크린샷 생성에 실패했습니다.');
       }
