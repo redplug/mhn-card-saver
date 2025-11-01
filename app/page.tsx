@@ -40,7 +40,11 @@ export default function Home() {
     card.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // ⬇️ [추가] 클라이언트가 로드되었는지 확인하는 상태 ⬇️
+  const [isClient, setIsClient] = useState(false);
+
   useEffect(() => {
+    setIsClient(true);
     async function loadCards() {
       console.log("--- [Client] loadCards: 카드 불러오기 시작...");
       try {
@@ -186,36 +190,41 @@ export default function Home() {
       className="container mx-auto p-4 max-w-3xl"
     >
       <h1 className="text-3xl font-bold mb-6 text-center">MHN 빌드 세이버</h1>
-
-      {/* URL 입력 폼 */}
-      <form onSubmit={handleAddCard} className="flex gap-2 mb-8">
-        <input
-          type="url"
-          value={urlInput}
-          onChange={(e) => setUrlInput(e.target.value)}
-          placeholder="https://mhn.quest 빌드 링크를 붙여넣으세요"
-          className="flex-grow border p-3 rounded-lg"
-          required
-        />
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-600 disabled:bg-gray-400"
-        >
-          {isLoading ? '생성 중...' : '추가'}
-        </button>
-      </form>
-      {/* ⬇️ [추가] 검색 입력창 ⬇️ */}
-      <div className="mb-8">
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="빌드명으로 검색하세요..."
-          className="w-full border p-3 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-        />
-      </div>
-      {/* ⬆️ 검색 입력창 끝 ⬆️ */}
+      {/* ⬇️ [핵심 수정] isClient가 true일 때만 폼을 렌더링 ⬇️ */}
+      {isClient ? <ClientForm /> : <div className="h-24 mb-8 flex justify-center items-center text-gray-500">로딩 중...</div>}
+      const ClientForm = () => (
+        <>
+          {/* URL 입력 폼 */}
+          <form onSubmit={handleAddCard} className="flex gap-2 mb-8">
+            <input
+              type="url"
+              value={urlInput}
+              onChange={(e) => setUrlInput(e.target.value)}
+              placeholder="https://mhn.quest 빌드 링크를 붙여넣으세요"
+              className="flex-grow border p-3 rounded-lg"
+              required
+            />
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-600 disabled:bg-gray-400"
+            >
+              {isLoading ? '생성 중...' : '추가'}
+            </button>
+          </form>
+          
+          {/* 검색 입력창 */}
+          <div className="mb-8">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="빌드명으로 검색하세요..."
+              className="w-full border p-3 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+        </>
+      );
       {/* 카드 목록이 표시될 공간 */}
       <div className="space-y-6">
         {/* 1. 로딩 상태 표시 */}
