@@ -20,23 +20,32 @@ export async function GET(request: Request) {
     const MOBILE_USER_AGENT = 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1';
     // --- ⬆️ 여기까지 ⬆️ ---
     // 현재 환경이 프로덕션(Vercel)인지 확인
-    const isProd = process.env.NODE_ENV === 'production';
+//     const isProd = process.env.NODE_ENV === 'production';
+
+//     // 1. 실행 경로 설정
+//     const executablePath = isProd
+//       ? await chromium.executablePath()
+//       : '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+    
+// // 2. 헤드리스 옵션 설정
+//     const headless = isProd 
+//       ? true  // [수정] 'chromium.headless'가 아니라 'true'입니다. (Vercel은 항상 true)
+//       : true; // 로컬 환경 (false로 두면 창이 뜹니다. true로 바꿔도 됩니다)
+    
+//     // 3. 실행 인수(args) 설정
+//     const args = isProd 
+//       ? chromium.args 
+//       : []; // ❗️[수정] 개발 환경에선 충돌 방지를 위해 빈 배열 전달
+
 
     // 1. 실행 경로 설정
-    const executablePath = isProd
-      ? await chromium.executablePath()
-      : '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+    const executablePath = await chromium.executablePath();
     
-// 2. 헤드리스 옵션 설정
-    const headless = isProd 
-      ? true  // [수정] 'chromium.headless'가 아니라 'true'입니다. (Vercel은 항상 true)
-      : true; // 로컬 환경 (false로 두면 창이 뜹니다. true로 바꿔도 됩니다)
+    // 2. 헤드리스 옵션 설정 (컨테이너는 항상 true)
+    const headless = true; 
     
     // 3. 실행 인수(args) 설정
-    const args = isProd 
-      ? chromium.args 
-      : []; // ❗️[수정] 개발 환경에선 충돌 방지를 위해 빈 배열 전달
-
+    const args = chromium.args;
     // --- ⬆️ 여기까지 ⬆️ ---
 
 
