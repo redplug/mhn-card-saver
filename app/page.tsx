@@ -30,6 +30,16 @@ export default function Home() {
   
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
+  // ⬇️ [추가] 검색어 상태 관리 ⬇️
+  const [searchTerm, setSearchTerm] = useState(""); 
+  
+  // ⬇️ [추가] 필터링된 카드 목록 계산 ⬇️
+  // cards 상태와 searchTerm 상태가 바뀔 때마다 실행됩니다.
+  const filteredCards = cards.filter(card => 
+    // 카드 이름(name)을 소문자로 변환하여 검색어가 포함되어 있는지 확인합니다.
+    card.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   useEffect(() => {
     async function loadCards() {
       console.log("--- [Client] loadCards: 카드 불러오기 시작...");
@@ -193,28 +203,42 @@ export default function Home() {
           {isLoading ? '생성 중...' : '추가'}
         </button>
       </form>
-
+      {/* ⬇️ [추가] 검색 입력창 ⬇️ */}
+      <div className="mb-8">
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="빌드명으로 검색하세요..."
+          className="w-full border p-3 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+        />
+      </div>
+      {/* ⬆️ 검색 입력창 끝 ⬆️ */}
       {/* 카드 목록이 표시될 공간 */}
       <div className="space-y-6">
-        {/* isLoading이 true이면 로딩 메시지를 보여줍니다. */}
+        {/* 1. 로딩 상태 표시 */}
         {isLoading && (
           <p className="text-center text-blue-500">
-            스크린샷을 생성 중입니다... (최대 10초 소요)
+            스크린샷을 생성 중입니다...
           </p>
         )}
 
-        {/* cards 배열을 순회하며 Card 컴포넌트를 그립니다. */}
-        {cards.map(card => (
+        {/* 2. 필터링된 카드 목록 렌더링 */}
+        {filteredCards.map(card => ( // ⚠️ [수정] cards 대신 filteredCards를 사용합니다.
           <Card
-            key={card.id} // React가 각 카드를 구분하기 위한 고유 키
+            key={card.id}
+            card={card}
             onDelete={handleDeleteCard}
             onNameChange={handleNameChange}
-            card={card}
           />
         ))}
-
+        
+        {/* 3. 빈 목록 메시지 */}
         {cards.length === 0 && !isLoading && (
           <p className="text-center text-gray-500">아직 추가된 빌드가 없습니다.</p>
+        )}
+        {cards.length > 0 && filteredCards.length === 0 && !isLoading && (
+          <p className="text-center text-gray-500">'{searchTerm}'에 해당하는 빌드를 찾을 수 없습니다.</p>
         )}
       </div>
     </main>
