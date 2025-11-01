@@ -22,7 +22,6 @@ export default function Card({ card, onDelete, onNameChange }: CardProps) {
       relative border rounded-2xl shadow-xl overflow-hidden bg-white
       flex flex-col
       transition-all duration-300 ease-in-out
-      hover:shadow-2xl hover:scale-105
     ">
       <div className="p-5 flex-grow space-y-4"> 
         {/* 1. 빌드명 입력 텍스트 박스 */}
