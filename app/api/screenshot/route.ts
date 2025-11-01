@@ -94,28 +94,25 @@ export async function GET(request: Request) {
     });
     
     await page.goto(url, { 
-      waitUntil: 'networkidle2', 
+      waitUntil: 'domcontentloaded', 
       referrer: 'https://www.google.com/', 
       timeout: 30000,
     });
 
     // 3. 한국어 버튼 클릭 및 컨텐츠 대기
     try {
-      // 1. 드롭다운 요소가 나타날 때까지 기다립니다.
+      // 1. 드롭다운 요소가 나타날 때까지 기다립니다. (30초로 늘려 안정성 확보)
       await page.waitForSelector(KOREAN_DROPDOWN_SELECTOR, { timeout: 30000 });
       
-      // 2. [핵심 수정] select()를 사용해 드롭다운 값을 변경하고, 페이지 재로딩을 기다립니다.
-      const selectAndReload = Promise.all([
-          // 페이지 재로딩 대기
-          page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 30000 }), 
-          // 드롭다운 요소에서 'ko' 값을 선택
-          page.select(KOREAN_DROPDOWN_SELECTOR, KOREAN_LANG_VALUE) 
-      ]);
+      // 2. [핵심 수정] Promise.all 및 waitForNavigation을 제거하고, select만 실행합니다.
+      //    (select는 페이지 재로딩 없이 콘텐츠만 바꾼다고 가정)
+      await page.select(KOREAN_DROPDOWN_SELECTOR, KOREAN_LANG_VALUE);
       
-      await selectAndReload; // 선택 및 재로딩 완료 대기
+      // 3. [추가] select 후 렌더링이 완료될 시간을 주기 위해 1초 대기 (안전장치)
+      await page.waitForTimeout(1000); // 1초 대기
       
-      // 3. 이제 페이지가 한국어로 완전히 로드되었으므로,
-      //    스크린샷 끝 요소가 렌더링될 때까지 기다립니다.
+      // 4. [가장 중요] 스크린샷 끝 요소가 화면에 나타날 때까지 기다립니다.
+      //    모든 대기는 이 요소의 등장에만 의존합니다.
       await page.waitForSelector(END_SELECTOR, { timeout: 30000 });
 
     } catch (waitError) {
