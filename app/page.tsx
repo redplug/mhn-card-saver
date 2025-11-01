@@ -227,8 +227,8 @@ export default function Home() {
               className="w-full border p-3 rounded-lg focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-        </>
-      );
+        
+      ;
       {/* 카드 목록이 표시될 공간 */}
       <div className="space-y-6">
         {/* 1. 로딩 상태 표시 */}
