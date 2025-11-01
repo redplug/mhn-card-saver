@@ -52,7 +52,7 @@ export async function GET(request: Request) {
         url.includes('google-analytics.com') ||
         url.includes('googletagmanager.com') ||
         url.includes('googlesyndication.com') ||
-        // url.includes('cloudflareinsights.com') ||
+        url.includes('cloudflareinsights.com') ||
         // request.resourceType() === 'media' || // 동영상, 음성 파일 차단
         request.resourceType() === 'media' // 동영상, 음성 파일 차단
         // request.resourceType() === 'image'    // 이미지 파일 차단 (선택적)
