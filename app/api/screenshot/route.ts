@@ -56,31 +56,33 @@ export async function GET(request: Request) {
     // 3. 뷰포트를 설정합니다. (isMobile: true도 중요)
     await page.setViewport({ width: 390, height: 844, isMobile: true });
     
+    const urlWithLang = `${url}&lang=ko`;
+
     await page.setExtraHTTPHeaders({
       'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7'
     });
     
     await page.goto(url, { waitUntil: 'networkidle0' });
 
-    try {
-      // 1. [추가] 자바스크립트가 <div class="main">에 "ko" 클래스를
-      //    추가할 때까지 최대 5초간 기다립니다.
-      await page.waitForFunction(
-        () => document.querySelector('div.main')?.classList.contains('ko'),
-        { timeout: 5000 }
-      );
-    } catch (langError) {
-      // 5초간 기다려도 '.ko' 클래스가 적용되지 않으면 여기서 실패합니다.
-      console.error('Failed to wait for .ko class assignment');
-      if (browser) await browser.close();
-      // 'unknown' 타입 오류를 해결하기 위해 'errorMessage' 변수를 사용합니다.
-      const errorMessage = langError instanceof Error ? langError.message : String(langError);
+    // try {
+    //   // 1. [추가] 자바스크립트가 <div class="main">에 "ko" 클래스를
+    //   //    추가할 때까지 최대 5초간 기다립니다.
+    //   await page.waitForFunction(
+    //     () => document.querySelector('div.main')?.classList.contains('ko'),
+    //     { timeout: 5000 }
+    //   );
+    // } catch (langError) {
+    //   // 5초간 기다려도 '.ko' 클래스가 적용되지 않으면 여기서 실패합니다.
+    //   console.error('Failed to wait for .ko class assignment');
+    //   if (browser) await browser.close();
+    //   // 'unknown' 타입 오류를 해결하기 위해 'errorMessage' 변수를 사용합니다.
+    //   const errorMessage = langError instanceof Error ? langError.message : String(langError);
 
-      return NextResponse.json(
-        { error: 'Failed to detect Korean language (.ko class timeout)', details: errorMessage },
-        { status: 500 }
-      );
-    }
+    //   return NextResponse.json(
+    //     { error: 'Failed to detect Korean language (.ko class timeout)', details: errorMessage },
+    //     { status: 500 }
+    //   );
+    // }
 
     // ❗️ [중요] 이 선택자들은 mhn.quest 사이트가 업데이트되면 또 실패할 수 있습니다.
     // 더 안정적인 ID(#)나 고유 클래스(예: .stat-group)를 찾는 것이 좋습니다.
