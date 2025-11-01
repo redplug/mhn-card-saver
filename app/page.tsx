@@ -182,8 +182,9 @@ export default function Home() {
   
   // 화면에 보여줄 HTML 코드입니다.
   return (
-    <main className="container mx-auto p-4 max-w-3xl"
-    // ⬇️ [추가] 하이드레이션 경고를 무시합니다. (외부 확장 프로그램 오류 해결용) ⬇️
+    <main 
+      className="container mx-auto p-4 max-w-3xl"
+      // ⬇️ [수정] 속성을 main 태그의 속성 목록에 직접 포함 ⬇️
       suppressHydrationWarning={true}
     >
       <h1 className="text-3xl font-bold mb-6 text-center">MHN 빌드 세이버</h1>
