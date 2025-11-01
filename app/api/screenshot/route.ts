@@ -5,8 +5,11 @@ import puppeteer from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
 
 // 한국어 버튼과 스크린샷 영역을 찾기 위한 선택자는 사용자님이 직접 찾은 값으로 교체해야 합니다.
-const KOREAN_BUTTON_SELECTOR = '#app > div.settings.svelte-ghcjle > div > div > select'; // 예: '#app > header > button.lang-ko'; // ⚠️ [필수] 한국어 버튼의 실제 CSS 선택자로 교체하세요.
-const KOREAN_BUTTON = '#app > div.settings.svelte-ghcjle > div > div > select > option:nth-child(4)'
+// [추가] 드롭다운의 value 값을 설정합니다.
+const KOREAN_LANG_VALUE = 'ko'; // ⚠️ [필수] 실제 웹사이트의 <option value="..."> 값으로 교체하세요.
+
+// 1. [수정] 한국어 버튼의 실제 CSS 선택자를 여기에 붙여넣으세요.
+const KOREAN_DROPDOWN_SELECTOR = '#app > div.settings.svelte-ghcjle > div > div > select';
 const START_SELECTOR = '#app > div.main.ko.svelte-1oecyh1 > div:nth-child(6)'; // ⚠️ [필수] 스크린샷 시작 영역의 안정적인 선택자로 교체하세요.
 const END_SELECTOR = '#app > div.main.ko.svelte-1oecyh1 > div.drift-buff.mobile.svelte-1oecyh1'; // ⚠️ [필수] 스크린샷 끝 영역의 안정적인 선택자로 교체하세요.
 
@@ -54,19 +57,18 @@ export async function GET(request: Request) {
 
     // 3. 한국어 버튼 클릭 및 컨텐츠 대기
     try {
-      // 1. 한국어 버튼이 나타날 때까지 기다립니다.
-      await page.waitForSelector(KOREAN_BUTTON_SELECTOR, { timeout: 10000 });
+      // 1. 드롭다운 요소가 나타날 때까지 기다립니다.
+      await page.waitForSelector(KOREAN_DROPDOWN_SELECTOR, { timeout: 10000 });
       
-      // 2. [수정] 클릭 후 페이지가 완전히 재로딩될 때까지 기다립니다.
-      //    (클릭과 재로딩 대기를 동시에 실행하는 표준 Puppeteer 패턴)
-      
-      const clickAndReload = Promise.all([
-          page.waitForNavigation({ waitUntil: 'networkidle0' }), // 페이지 재로딩을 기다림
-          page.click(KOREAN_BUTTON_SELECTOR),
-          page.click(KOREAN_BUTTON)                      // 클릭을 실행
+      // 2. [핵심 수정] select()를 사용해 드롭다운 값을 변경하고, 페이지 재로딩을 기다립니다.
+      const selectAndReload = Promise.all([
+          // 페이지 재로딩 대기
+          page.waitForNavigation({ waitUntil: 'networkidle0' }), 
+          // 드롭다운 요소에서 'ko' 값을 선택
+          page.select(KOREAN_DROPDOWN_SELECTOR, KOREAN_LANG_VALUE) 
       ]);
       
-      await clickAndReload; // 클릭 및 재로딩 완료 대기
+      await selectAndReload; // 선택 및 재로딩 완료 대기
       
       // 3. 이제 페이지가 한국어로 완전히 로드되었으므로,
       //    스크린샷 끝 요소가 렌더링될 때까지 기다립니다.
