@@ -1,7 +1,20 @@
 // components/Card.tsx
 
 import { useState, useCallback } from 'react'; 
-import { CardProps } from '@/types'; 
+// import { CardProps } from '@/types'; 
+
+export type CardType = {
+  id: number;
+  url: string;
+  screenshot: string;
+  name: string;
+};
+
+interface CardProps {
+  card: CardType;
+  onDelete: (id: number) => void;
+  onNameChange: (id: number, newName: string) => void;
+}
 
 // 아이콘 정의는 생략 (기존 코드와 동일)
 const ArrowRightIcon = (props: React.SVGProps<SVGSVGElement>) => (

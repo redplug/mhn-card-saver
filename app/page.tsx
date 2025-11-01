@@ -95,7 +95,15 @@ export default function Home() {
         console.log(`--- [Client] loadCards: 카드 ${data.length}개 불러오기 성공.`);
       } catch (error) {
         console.error("--- [Client] loadCards 실패:", error);
-        alert(`[로드 실패] 카드 목록을 불러오는 데 실패했습니다: ${error.message}`);
+      
+        let errorMessage = "알 수 없는 오류가 발생했습니다."; // Default message
+
+        if (error instanceof Error) {
+          // Now TypeScript knows 'error' has a 'message' property
+          errorMessage = error.message; 
+        }
+        
+        alert(`[로드 실패] 카드 목록을 불러오는 데 실패했습니다: ${errorMessage}`);
       }
       setIsInitialLoad(false);
     }
@@ -123,7 +131,16 @@ export default function Home() {
         console.log("--- [Client] saveCardsToDB: 저장 성공.");
       } catch (error) {
         console.error("--- [Client] saveCardsToDB 실패:", error);
-        alert(`[저장 실패] 카드 목록을 저장하는 데 실패했습니다: ${error.message}`);
+      
+        let errorMessage = "알 수 없는 오류가 발생했습니다."; // Default fallback message
+
+        // **Type Narrowing Check**
+        // Check if the error is an instance of the built-in Error class.
+        if (error instanceof Error) {
+          errorMessage = error.message; 
+        }
+        
+        alert(`[저장 실패] 카드 목록을 저장하는 데 실패했습니다: ${errorMessage}`);
       }
     }
     

@@ -76,7 +76,8 @@ export async function GET(request: Request) {
 
     // 2. 페이지 에러/크래시 이벤트를 서버 터미널에 출력
     page.on('pageerror', (err) => {
-      console.error(`[PAGE ERROR] ${err.message}`);
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      console.error(`[PAGE ERROR] ${errorMessage}`);
     });
     
     // 3. 페이지가 요청을 실패할 때 네트워크 에러를 기록
@@ -97,7 +98,6 @@ export async function GET(request: Request) {
     
     await page.goto(url, { 
       waitUntil: 'domcontentloaded', 
-      referrer: 'https://www.google.com/', 
       timeout: 30000,
     });
 
@@ -122,7 +122,8 @@ export async function GET(request: Request) {
 
     } catch (waitError) {
       // 10초 내에 버튼 클릭이나 컨텐츠 로드에 실패한 경우
-      console.error(`Failed to find UI element or content: ${waitError.message}`);
+      const consoleErrorMessage = waitError instanceof Error ? waitError.message : String(waitError);
+      console.error(`Failed to find UI element or content: ${consoleErrorMessage}`);
       
       // 디버그 스크린샷을 찍어 무엇이 보이는지 확인
       const debugBuffer = await page.screenshot({ type: 'png', encoding: 'base64' });
