@@ -89,8 +89,8 @@ export async function GET(request: Request) {
 
     const KOREAN_BUTTON_SELECTOR = 'div.settings.svelte-ghcjle > div > div > select > option:nth-child(4)'; // 예: '#app > header > button.lang-ko'
 
-    const startSelector = 'div.main.en.svelte-1oecyh1';
-    const endSelector = 'div.main.en.svelte-1oecyh1';
+    const startSelector = '.svelte-1oecyh1';
+    const endSelector = 'div.drift-buff.mobile.svelte-1oecyh1';
 
     try {
       // 1. [추가] 끝 요소가 렌더링될 때까지 최대 5초간 기다립니다.
