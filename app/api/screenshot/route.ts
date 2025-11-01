@@ -53,6 +53,7 @@ export async function GET(request: Request) {
     await page.goto(url, { 
       waitUntil: 'networkidle0', 
       referrer: 'https://www.google.com/', 
+      timeout: 60000,
     });
 
     // 3. 한국어 버튼 클릭 및 컨텐츠 대기
