@@ -53,7 +53,8 @@ export async function GET(request: Request) {
         url.includes('googletagmanager.com') ||
         url.includes('googlesyndication.com') ||
         // url.includes('cloudflareinsights.com') ||
-        request.resourceType() === 'media' || // 동영상, 음성 파일 차단
+        // request.resourceType() === 'media' || // 동영상, 음성 파일 차단
+        request.resourceType() === 'media' // 동영상, 음성 파일 차단
         // request.resourceType() === 'image'    // 이미지 파일 차단 (선택적)
       ) {
         request.abort(); // 요청을 차단하고 즉시 종료
