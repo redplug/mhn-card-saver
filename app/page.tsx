@@ -18,6 +18,7 @@ interface ClientFormProps {
   handleAddCard: (e: React.FormEvent<HTMLFormElement>) => void;
   setUrlInput: (value: string) => void;
   setSearchTerm: (value: string) => void;
+  searchRef: React.RefObject<HTMLInputElement>;
 }
 
 // --- [분리] ClientForm 컴포넌트 정의 (Home 함수 밖으로 이동) ---
@@ -28,6 +29,7 @@ const ClientForm = ({
   handleAddCard,
   setUrlInput,
   setSearchTerm,
+  searchRef,
 }: ClientFormProps) => (
   <>
     {/* URL 입력 폼 */}
@@ -53,6 +55,8 @@ const ClientForm = ({
     <div className="mb-8">
       <input
         type="text"
+        // ⬇️ [수정] searchRef를 input 요소에 연결 ⬇️
+        ref={searchRef}
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         placeholder="빌드명으로 검색하세요..."
