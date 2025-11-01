@@ -106,13 +106,13 @@ export async function GET(request: Request) {
       await page.waitForSelector(KOREAN_DROPDOWN_SELECTOR, { timeout: 30000, visible: true });
       
       // 2. [수정] select 실행 전에 500ms 딜레이를 추가합니다. (안전장치)
-      await page.waitForTimeout(500); 
+      await page.waitForTimeout(5000); 
 
       // 3. select 실행 (페이지 재로딩 대기 없음)
       await page.select(KOREAN_DROPDOWN_SELECTOR, KOREAN_LANG_VALUE);
       
       // 4. [수정] select 후, 컨텐츠 로딩 시간을 2초로 늘립니다.
-      await page.waitForTimeout(2000); 
+      await page.waitForTimeout(5000); 
       
       // 5. 스크린샷 끝 요소 대기 (30초)
       await page.waitForSelector(END_SELECTOR, { timeout: 30000 });
