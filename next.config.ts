@@ -11,6 +11,13 @@ const nextConfig: NextConfig = {
    * @sparticuz/chromium 패키지의 'bin' 폴더 내부 모든 파일을
    * 강제로 포함(include)시킵니다.
    */
+
+  // Next.js에게 'KV_REST_API_URL' 변수는 개발 환경에서 필요 없다고 알려줍니다.
+  env: {
+    KV_REST_API_URL: process.env.KV_REST_API_URL || "http://dummy-url.com",
+    KV_REST_API_TOKEN: process.env.KV_REST_API_TOKEN || "dummy-token",
+  },
+
   outputFileTracingIncludes: {
     '/api/screenshot': ['./node_modules/@sparticuz/chromium/bin/**'],
   },
