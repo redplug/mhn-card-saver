@@ -86,12 +86,22 @@ export async function GET(request: Request) {
 
     // ❗️ [중요] 이 선택자들은 mhn.quest 사이트가 업데이트되면 또 실패할 수 있습니다.
     // 더 안정적인 ID(#)나 고유 클래스(예: .stat-group)를 찾는 것이 좋습니다.
+
+    const KOREAN_BUTTON_SELECTOR = '#app > div.settings.svelte-ghcjle > div > div > select > option:nth-child(4)'; // 예: '#app > header > button.lang-ko'
+
     const startSelector = 'div.main.ko';
     const endSelector = 'div.main.ko';
 
     try {
       // 1. [추가] 끝 요소가 렌더링될 때까지 최대 5초간 기다립니다.
       // (이것이 타이밍 문제를 해결해 줄 것입니다.)
+
+      // 2. 한국어 버튼이 나타날 때까지 10초간 기다립니다.
+      await page.waitForSelector(KOREAN_BUTTON_SELECTOR, { timeout: 10000 });
+      
+      // 3. 한국어 버튼을 클릭합니다.
+      await page.click(KOREAN_BUTTON_SELECTOR);
+      
       await page.waitForSelector(endSelector, { timeout: 10000 });
     } catch (waitError) {
       // 5초간 기다려도 요소를 찾지 못하면, 선택자가 깨졌거나 페이지가 잘못된 것.
