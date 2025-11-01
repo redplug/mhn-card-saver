@@ -12,7 +12,7 @@ const KOREAN_LANG_VALUE = 'ko'; // ⚠️ [필수] 실제 웹사이트의 <optio
 
 // 1. [수정] 한국어 버튼의 실제 CSS 선택자를 여기에 붙여넣으세요.
 const KOREAN_DROPDOWN_SELECTOR = '#app > div.settings.svelte-ghcjle > div > div > select';
-const START_SELECTOR = '#app > div.main.ko.svelte-1oecyh1 > div:nth-child(6)'; // ⚠️ [필수] 스크린샷 시작 영역의 안정적인 선택자로 교체하세요.
+const START_SELECTOR = '#app > div.main.ko.svelte-1oecyh1 > div:nth-child(5)'; // ⚠️ [필수] 스크린샷 시작 영역의 안정적인 선택자로 교체하세요.
 const END_SELECTOR = '#app > div.main.ko.svelte-1oecyh1 > div.drift-buff.mobile.svelte-1oecyh1'; // ⚠️ [필수] 스크린샷 끝 영역의 안정적인 선택자로 교체하세요.
 
 // 모바일 User-Agent
