@@ -1,9 +1,11 @@
 'use client'; 
 
-import { useState, useEffect, FormEvent } from 'react';
-import Card, { CardProps } from '@/components/Card'; // CardProps 타입이 Card.tsx에 정의되어 있지 않다면, CardProps는 app/page.tsx에서 정의해야 합니다.
+import { useState, useEffect, FormEvent, useCallback } from 'react';
+import Card from '@/components/Card';
 
-// --- CardType 정의 (이전에 사용했던 정의를 유지) ---
+// CardProps 타입은 Card.tsx 파일에서 import 하거나, 이 파일에 정의되어 있어야 합니다.
+// 여기서는 type CardType을 기반으로 CardProps를 유추합니다.
+
 export type CardType = {
   id: number;
   url: string;
@@ -82,7 +84,6 @@ export default function Home() {
   // --- DB 로드 (EFFECT) ---
   useEffect(() => {
     setIsClient(true);
-    // ... (loadCards 로직 유지) ...
     async function loadCards() {
       console.log("--- [Client] loadCards: 카드 불러오기 시작...");
       try {
@@ -110,7 +111,7 @@ export default function Home() {
     }
     
     async function saveCardsToDB() {
-      // ... (saveCardsToDB 로직 유지) ...
+      console.log(`--- [Client] saveCardsToDB: 카드 ${cards.length}개 저장 시도...`);
       try {
         const res = await fetch('/api/cards', {
           method: 'POST', 
@@ -131,8 +132,8 @@ export default function Home() {
     
   }, [cards, isInitialLoad]);
 
-  // --- 카드 추가 핸들러 (HANDLER) ---
-  const handleAddCard = async (e: React.FormEvent<HTMLFormElement>) => {
+  // --- 카드 추가 핸들러 (useCallback으로 감싸기) ---
+  const handleAddCard = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!urlInput) return;
 
@@ -151,9 +152,9 @@ export default function Home() {
       const res = await fetch(`/api/screenshot?url=${encodeURIComponent(urlInput)}`);
 
       if (!res.ok) {
-        // ... (오류 및 디버그 카드 생성 로직 유지) ...
         const errorData = await res.json();
         
+        // 디버그 스크린샷 카드 생성 (스크린샷 실패 시)
         if (errorData.debugScreenshotBase64) {
           const errorCard: CardType = {
             id: Date.now(),
@@ -161,7 +162,7 @@ export default function Home() {
             screenshot: `data:image/png;base64,${errorData.debugScreenshotBase64}`,
             name: "⚠️ 스크린샷 실패 (디버그 화면)"
           };
-          setCards([errorCard, ...cards]);
+          setCards(prevCards => [errorCard, ...prevCards]);
           setIsLoading(false);
           alert(`오류: 스크린샷 영역을 찾지 못했습니다. 무엇이 보이는지 디버그 카드를 확인해주세요.`);
           return;
@@ -180,7 +181,7 @@ export default function Home() {
           screenshot: `data:image/png;base64,${data.screenshotBase64}`, 
           name: "새 빌드",
         };
-        setCards([newCard, ...cards]); 
+        setCards(prevCards => [newCard, ...prevCards]);
         setUrlInput("");
       }
 
@@ -191,21 +192,21 @@ export default function Home() {
     }
 
     setIsLoading(false);
-  };
+  }, [urlInput, cards]); // 🚨 [핵심] 의존성 배열에 urlInput과 cards를 명시
 
   // --- 카드 수정/삭제 핸들러 ---
-  const handleDeleteCard = (id: number) => {
+  const handleDeleteCard = useCallback((id: number) => {
     const isConfirmed = window.confirm(`정말로 이 빌드를 삭제하시겠습니까?`);
     if (isConfirmed) {
-      setCards(cards.filter(card => card.id !== id));
+      setCards(prevCards => prevCards.filter(card => card.id !== id));
     }
-  };
+  }, []);
 
-  const handleNameChange = (id: number, newName: string) => {
-    setCards(cards.map(card => 
+  const handleNameChange = useCallback((id: number, newName: string) => {
+    setCards(prevCards => prevCards.map(card => 
       card.id === id ? { ...card, name: newName } : card
     ));
-  };
+  }, []);
   
   // --- 최종 렌더링 (RETURN) ---
   return (
