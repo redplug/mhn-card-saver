@@ -5,7 +5,8 @@ import puppeteer from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
 
 // 한국어 버튼과 스크린샷 영역을 찾기 위한 선택자는 사용자님이 직접 찾은 값으로 교체해야 합니다.
-const KOREAN_BUTTON_SELECTOR = '#app > div.settings.svelte-ghcjle > div > div > select > option:nth-child(4)'; // 예: '#app > header > button.lang-ko'; // ⚠️ [필수] 한국어 버튼의 실제 CSS 선택자로 교체하세요.
+const KOREAN_BUTTON_SELECTOR = '#app > div.settings.svelte-ghcjle > div > div > select'; // 예: '#app > header > button.lang-ko'; // ⚠️ [필수] 한국어 버튼의 실제 CSS 선택자로 교체하세요.
+const KOREAN_BUTTON = '#app > div.settings.svelte-ghcjle > div > div > select > option:nth-child(4)'
 const START_SELECTOR = '#app > div.main.ko.svelte-1oecyh1 > div:nth-child(6)'; // ⚠️ [필수] 스크린샷 시작 영역의 안정적인 선택자로 교체하세요.
 const END_SELECTOR = '#app > div.main.ko.svelte-1oecyh1 > div.drift-buff.mobile.svelte-1oecyh1'; // ⚠️ [필수] 스크린샷 끝 영역의 안정적인 선택자로 교체하세요.
 
@@ -61,7 +62,8 @@ export async function GET(request: Request) {
       
       const clickAndReload = Promise.all([
           page.waitForNavigation({ waitUntil: 'networkidle0' }), // 페이지 재로딩을 기다림
-          page.click(KOREAN_BUTTON_SELECTOR)                      // 클릭을 실행
+          page.click(KOREAN_BUTTON_SELECTOR)
+          page.click(KOREAN_BUTTON)                      // 클릭을 실행
       ]);
       
       await clickAndReload; // 클릭 및 재로딩 완료 대기
