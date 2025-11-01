@@ -1,8 +1,9 @@
 'use client'; 
 
 import { useState, useEffect, FormEvent } from 'react';
-import Card from '@/components/Card';
+import Card, { CardProps } from '@/components/Card'; // CardProps 타입이 Card.tsx에 정의되어 있지 않다면, CardProps는 app/page.tsx에서 정의해야 합니다.
 
+// --- CardType 정의 (이전에 사용했던 정의를 유지) ---
 export type CardType = {
   id: number;
   url: string;
@@ -10,6 +11,60 @@ export type CardType = {
   name: string;
 };
 
+// --- [분리] ClientForm에 필요한 Props 정의 ---
+interface ClientFormProps {
+  urlInput: string;
+  searchTerm: string;
+  isLoading: boolean;
+  handleAddCard: (e: React.FormEvent<HTMLFormElement>) => void;
+  setUrlInput: (value: string) => void;
+  setSearchTerm: (value: string) => void;
+}
+
+// --- [분리] ClientForm 컴포넌트 정의 (Home 함수 밖으로 이동) ---
+const ClientForm = ({
+  urlInput,
+  searchTerm,
+  isLoading,
+  handleAddCard,
+  setUrlInput,
+  setSearchTerm,
+}: ClientFormProps) => (
+  <>
+    {/* URL 입력 폼 */}
+    <form onSubmit={handleAddCard} className="flex gap-2 mb-8">
+      <input
+        type="url"
+        value={urlInput}
+        onChange={(e) => setUrlInput(e.target.value)}
+        placeholder="https://mhn.quest 빌드 링크를 붙여넣으세요"
+        className="flex-grow border p-3 rounded-lg"
+        required
+      />
+      <button
+        type="submit"
+        disabled={isLoading}
+        className="bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-600 disabled:bg-gray-400"
+      >
+        {isLoading ? '생성 중...' : '추가'}
+      </button>
+    </form>
+    
+    {/* 검색 입력창 */}
+    <div className="mb-8">
+      <input
+        type="text"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        placeholder="빌드명으로 검색하세요..."
+        className="w-full border p-3 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+      />
+    </div>
+  </>
+);
+
+
+// --- Home 컴포넌트 (메인) ---
 export default function Home() {
   // --- 상태 관리 (STATE) ---
   const [urlInput, setUrlInput] = useState("");
@@ -20,14 +75,14 @@ export default function Home() {
   const [isClient, setIsClient] = useState(false); // 클라이언트 렌더링 확인
 
   // --- 파생 상태 (DERIVED STATE) ---
-  // cards 상태와 searchTerm 상태가 바뀔 때마다 필터링됩니다.
   const filteredCards = cards.filter(card => 
     card.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // --- DB 로드 (EFFECT) ---
   useEffect(() => {
-    setIsClient(true); // 클라이언트 마운트 완료 (하이드레이션 오류 우회)
+    setIsClient(true);
+    // ... (loadCards 로직 유지) ...
     async function loadCards() {
       console.log("--- [Client] loadCards: 카드 불러오기 시작...");
       try {
@@ -55,7 +110,7 @@ export default function Home() {
     }
     
     async function saveCardsToDB() {
-      console.log(`--- [Client] saveCardsToDB: 카드 ${cards.length}개 저장 시도...`);
+      // ... (saveCardsToDB 로직 유지) ...
       try {
         const res = await fetch('/api/cards', {
           method: 'POST', 
@@ -96,9 +151,9 @@ export default function Home() {
       const res = await fetch(`/api/screenshot?url=${encodeURIComponent(urlInput)}`);
 
       if (!res.ok) {
+        // ... (오류 및 디버그 카드 생성 로직 유지) ...
         const errorData = await res.json();
         
-        // 디버그 스크린샷 카드 생성 (스크린샷 실패 시)
         if (errorData.debugScreenshotBase64) {
           const errorCard: CardType = {
             id: Date.now(),
@@ -152,42 +207,6 @@ export default function Home() {
     ));
   };
   
-  // --- 클라이언트 렌더링 폼 (COMPONENT) ---
-  // 하이드레이션 오류 방지를 위해 폼과 인풋은 클라이언트에서만 렌더링합니다.
-  const ClientForm = () => (
-    <>
-      {/* URL 입력 폼 */}
-      <form onSubmit={handleAddCard} className="flex gap-2 mb-8">
-        <input
-          type="url"
-          value={urlInput}
-          onChange={(e) => setUrlInput(e.target.value)}
-          placeholder="https://mhn.quest 빌드 링크를 붙여넣으세요"
-          className="flex-grow border p-3 rounded-lg"
-          required
-        />
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-600 disabled:bg-gray-400"
-        >
-          {isLoading ? '생성 중...' : '추가'}
-        </button>
-      </form>
-      
-      {/* 검색 입력창 */}
-      <div className="mb-8">
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="빌드명으로 검색하세요..."
-          className="w-full border p-3 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-        />
-      </div>
-    </>
-  );
-
   // --- 최종 렌더링 (RETURN) ---
   return (
     <main 
@@ -197,7 +216,16 @@ export default function Home() {
       <h1 className="text-3xl font-bold mb-6 text-center">MHN 빌드 세이버</h1>
 
       {/* 1. isClient 상태에 따라 폼을 조건부 렌더링 */}
-      {isClient ? <ClientForm /> : (
+      {isClient ? 
+        <ClientForm 
+          urlInput={urlInput}
+          searchTerm={searchTerm}
+          isLoading={isLoading}
+          handleAddCard={handleAddCard}
+          setUrlInput={setUrlInput}
+          setSearchTerm={setSearchTerm}
+        /> 
+        : (
         <div className="h-24 mb-8 flex justify-center items-center text-gray-500">
           UI 로딩 중...
         </div>
