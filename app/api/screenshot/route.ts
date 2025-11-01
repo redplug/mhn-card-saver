@@ -27,10 +27,10 @@ export async function GET(request: Request) {
       ? await chromium.executablePath()
       : '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
     
-    // 2. 헤드리스 옵션 설정
+// 2. 헤드리스 옵션 설정
     const headless = isProd 
-      ? chromium.headless 
-      : false; // ❗️[수정] 개발 환경에선 false로 바꿔서 눈으로 확인!
+      ? true  // [수정] 'chromium.headless'가 아니라 'true'입니다. (Vercel은 항상 true)
+      : false; // 로컬 환경 (false로 두면 창이 뜹니다. true로 바꿔도 됩니다)
     
     // 3. 실행 인수(args) 설정
     const args = isProd 
@@ -45,7 +45,7 @@ export async function GET(request: Request) {
       args: args, // 'args' 변수 사용
       executablePath: executablePath,
       headless: headless,
-      ignoreHTTPSErrors: true,
+    //   ignoreHTTPSErrors: true,
     });
 
     const page = await browser.newPage();
@@ -115,8 +115,18 @@ export async function GET(request: Request) {
     if (browser) {
       await browser.close();
     }
+
+    // 1. 에러 메시지를 담을 변수 생성
+    let errorMessage = 'An unknown error occurred';
+
+    // 2. error가 'Error' 객체의 인스턴스(instance)인지 확인
+    if (error instanceof Error) {
+      errorMessage = error.message; // 맞으면 .message 속성을 사용
+    }
+
+    // 3. 'details'에 error.message 대신 'errorMessage' 변수를 사용
     return NextResponse.json(
-      { error: 'Failed to take screenshot', details: error.message },
+      { error: 'Failed to take screenshot', details: errorMessage },
       { status: 500 }
     );
   }

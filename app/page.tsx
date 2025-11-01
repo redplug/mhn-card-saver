@@ -5,8 +5,17 @@
 'use client'; 
 
 // React에서 '상태'를 관리하기 위한 도구(useState)를 가져옵니다.
-import { useState } from 'react';
+// import { useState } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import Card from '@/components/Card'; // <-- 이 줄 추가
+
+export type CardType = {
+  id: number;
+  url: string;
+  screenshot: string;
+  name: string;
+};
+
 // 이 페이지의 메인 컴포넌트(내용물)입니다.
 export default function Home() {
 
@@ -15,13 +24,16 @@ export default function Home() {
   // 2. cards: 생성된 카드 목록을 저장할 공간 (배열)
   // 3. isLoading: 스크린샷 생성 중인지(로딩 중인지) 확인할 공간
   const [urlInput, setUrlInput] = useState("");
-  const [cards, setCards] = useState([]);
+  // const [cards, setCards] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [cards, setCards] = useState<CardType[]>([]);
+  
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   // '추가' 버튼을 눌렀을 때 실행될 함수 (지금은 비워둡니다)
 // app/page.tsx 파일의 handleAddCard 함수 부분
 
-  const handleAddCard = async (e) => {
+  const handleAddCard = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); // 페이지 새로고침 방지
     if (!urlInput) return; // URL이 비어있으면 중단
 
@@ -40,7 +52,7 @@ export default function Home() {
 
       if (data.screenshotBase64) {
         // 성공 시, 새 카드 객체를 만듭니다.
-        const newCard = {
+        const newCard: CardType = {
           id: Date.now(), // 고유한 ID (현재 시간)
           url: urlInput,
           // 'data:image/png;base64,' 이걸 붙여야 이미지로 인식됩니다.
@@ -56,7 +68,8 @@ export default function Home() {
 
     } catch (error) {
       console.error(error);
-      alert("오류가 발생했습니다: " + error.message);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      alert("오류가 발생했습니다: " + errorMessage);
     }
 
     setIsLoading(false); // 로딩 끝!
