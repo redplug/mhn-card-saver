@@ -73,8 +73,11 @@ export async function GET(request: Request) {
       // 5초간 기다려도 '.ko' 클래스가 적용되지 않으면 여기서 실패합니다.
       console.error('Failed to wait for .ko class assignment');
       if (browser) await browser.close();
+      // 'unknown' 타입 오류를 해결하기 위해 'errorMessage' 변수를 사용합니다.
+      const errorMessage = langError instanceof Error ? langError.message : String(langError);
+
       return NextResponse.json(
-        { error: 'Failed to detect Korean language (.ko class timeout)', details: langError.message },
+        { error: 'Failed to detect Korean language (.ko class timeout)', details: errorMessage },
         { status: 500 }
       );
     }
