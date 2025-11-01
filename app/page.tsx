@@ -184,8 +184,6 @@ export default function Home() {
   return (
     <main 
       className="container mx-auto p-4 max-w-3xl"
-      // ⬇️ [수정] 속성을 main 태그의 속성 목록에 직접 포함 ⬇️
-      suppressHydrationWarning="true"
     >
       <h1 className="text-3xl font-bold mb-6 text-center">MHN 빌드 세이버</h1>
 
