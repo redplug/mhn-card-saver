@@ -195,9 +195,9 @@ export default function Home() {
         {cards.map(card => (
           <Card
             key={card.id} // React가 각 카드를 구분하기 위한 고유 키
-            card={card}
             onDelete={handleDeleteCard}
             onNameChange={handleNameChange}
+            card={card}
           />
         ))}
 
