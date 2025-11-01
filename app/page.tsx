@@ -3,9 +3,6 @@
 import { useState, useEffect, FormEvent, useCallback } from 'react';
 import Card from '@/components/Card';
 
-// CardProps 타입은 Card.tsx 파일에서 import 하거나, 이 파일에 정의되어 있어야 합니다.
-// 여기서는 type CardType을 기반으로 CardProps를 유추합니다.
-
 export type CardType = {
   id: number;
   url: string;
@@ -192,7 +189,7 @@ export default function Home() {
     }
 
     setIsLoading(false);
-  }, [urlInput, cards]); // 🚨 [핵심] 의존성 배열에 urlInput과 cards를 명시
+  }, [urlInput, cards]);
 
   // --- 카드 수정/삭제 핸들러 ---
   const handleDeleteCard = useCallback((id: number) => {
@@ -241,22 +238,27 @@ export default function Home() {
           </p>
         )}
 
-        {/* 필터링된 카드 목록 렌더링 */}
-        {filteredCards.map(card => (
-          <Card
-            key={card.id}
-            card={card}
-            onDelete={handleDeleteCard}
-            onNameChange={handleNameChange}
-          />
-        ))}
-        
-        {/* 빈 목록 메시지 */}
-        {cards.length === 0 && !isLoading && (
-          <p className="text-center text-gray-500">아직 추가된 빌드가 없습니다.</p>
-        )}
-        {cards.length > 0 && filteredCards.length === 0 && !isLoading && (
-          <p className="text-center text-gray-500">'{searchTerm}'에 해당하는 빌드를 찾을 수 없습니다.</p>
+        {/* 🚨 [수정] 카드 목록 또는 빈 목록 메시지를 렌더링합니다. */}
+        {filteredCards.length > 0 ? (
+          filteredCards.map(card => (
+            <Card
+              key={card.id}
+              card={card}
+              onDelete={handleDeleteCard}
+              onNameChange={handleNameChange}
+            />
+          ))
+        ) : (
+          // 🚨 [핵심 수정] 검색 결과가 없을 때 높이를 고정하여 DOM 변동을 최소화합니다.
+          <div className="min-h-[100px] flex items-center justify-center">
+            {cards.length === 0 && !isLoading ? (
+              <p className="text-center text-gray-500">아직 추가된 빌드가 없습니다.</p>
+            ) : (
+              !isLoading && (
+                <p className="text-center text-gray-500">'{searchTerm}'에 해당하는 빌드를 찾을 수 없습니다.</p>
+              )
+            )}
+          </div>
         )}
       </div>
     </main>
