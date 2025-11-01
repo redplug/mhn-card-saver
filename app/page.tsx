@@ -188,12 +188,16 @@ export default function Home() {
   return (
     <main 
       className="container mx-auto p-4 max-w-3xl"
+      // 외부 확장 프로그램으로 인한 오류를 무시합니다.
+      suppressHydrationWarning={true}
     >
       <h1 className="text-3xl font-bold mb-6 text-center">MHN 빌드 세이버</h1>
       {/* ⬇️ [핵심 수정] isClient가 true일 때만 폼을 렌더링 ⬇️ */}
-      {isClient ? <ClientForm /> : <div className="h-24 mb-8 flex justify-center items-center text-gray-500">로딩 중...</div>}
-      const ClientForm = () => (
-        <>
+      {isClient ? <ClientForm /> : (
+        <div className="h-24 mb-8 flex justify-center items-center text-gray-500">
+          UI 로딩 중...
+        </div>
+      )}
           {/* URL 입력 폼 */}
           <form onSubmit={handleAddCard} className="flex gap-2 mb-8">
             <input
