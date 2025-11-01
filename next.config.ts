@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   /* config options here */
   // --- 사용자의 기존 설정 (예시) ---
   reactStrictMode: true,
+  output: 'standalone',
   // (만약 다른 설정이 더 있다면, 그대로 두세요)
   /**
    * Vercel 빌드 시 누락되는 파일을 강제로 포함시킵니다.
