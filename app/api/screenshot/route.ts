@@ -56,8 +56,9 @@ export async function GET(request: Request) {
     // 3. 뷰포트를 설정합니다. (isMobile: true도 중요)
     await page.setViewport({ width: 390, height: 844, isMobile: true });
     
-    // 이 부분에서 오류가 발생했습니다.
-    await page.setViewport({ width: 390, height: 844, isMobile: true });
+    await page.setExtraHTTPHeaders({
+      'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7'
+    });
     
     await page.goto(url, { waitUntil: 'networkidle0' });
 
