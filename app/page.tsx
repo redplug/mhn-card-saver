@@ -86,9 +86,21 @@ export default function Home() {
     e.preventDefault(); // 페이지 새로고침 방지
     if (!urlInput) return; // URL이 비어있으면 중단
    // 내용 추가  
+
+    // --- ⬇️ 1. [핵심 추가] 중복 체크 로직 ⬇️ ---
+    const isDuplicate = cards.some(card => card.url === urlInput);
+
+    if (isDuplicate) {
+      alert("이미 추가된 빌드 주소입니다! 중복된 주소는 추가할 수 없습니다.");
+      setUrlInput("");
+      return; // 중복이므로 함수 실행을 중단합니다.
+    }
+    // --- ⬆️ 중복 체크 로직 끝 ⬆️ ---
+
     setIsLoading(true); // 로딩 시작!
 
     try {
+      
       // 3단계에서 만든 API(/api/screenshot)를 호출합니다.
       // ?url=... 뒤에 사용자가 입력한 URL을 붙여서 보냅니다.
       const res = await fetch(`/api/screenshot?url=${encodeURIComponent(urlInput)}`);
