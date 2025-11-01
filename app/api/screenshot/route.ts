@@ -1,6 +1,5 @@
 // app/api/screenshot/route.ts (최종 수정본)
 
-import { kv } from '@vercel/kv';
 import { NextResponse } from 'next/server';
 import puppeteer from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
