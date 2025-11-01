@@ -30,6 +30,55 @@ export default function Home() {
   
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
+  useEffect(() => {
+    async function loadCards() {
+      console.log("--- [Client] loadCards: 카드 불러오기 시작...");
+      try {
+        const res = await fetch('/api/cards');
+        if (!res.ok) {
+          throw new Error(`API가 에러를 반환했습니다: ${res.status}`);
+        }
+        const data = await res.json();
+        setCards(data);
+        console.log(`--- [Client] loadCards: 카드 ${data.length}개 불러오기 성공.`);
+      } catch (error) {
+        console.error("--- [Client] loadCards 실패:", error);
+        alert(`[로드 실패] 카드 목록을 불러오는 데 실패했습니다: ${error.message}`);
+      }
+      setIsInitialLoad(false); // 로딩 완료!
+    }
+    
+    loadCards();
+  }, []); // [] : 이 훅은 페이지가 처음 켜질 때 딱 한 번만 실행됨
+
+  // 4. [수정] 'cards' 상태가 '변경'될 때마다 'DB'에 '저장'하는 훅
+  useEffect(() => {
+    if (isInitialLoad) {
+      return; 
+    }
+    
+    async function saveCardsToDB() {
+      console.log(`--- [Client] saveCardsToDB: 카드 ${cards.length}개 저장 시도...`);
+      try {
+        const res = await fetch('/api/cards', {
+          method: 'POST', 
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(cards), 
+        });
+        if (!res.ok) {
+          throw new Error(`API가 에러를 반환했습니다: ${res.status}`);
+        }
+        console.log("--- [Client] saveCardsToDB: 저장 성공.");
+      } catch (error) {
+        console.error("--- [Client] saveCardsToDB 실패:", error);
+        alert(`[저장 실패] 카드 목록을 저장하는 데 실패했습니다: ${error.message}`);
+      }
+    }
+    
+    saveCardsToDB();
+    
+  }, [cards, isInitialLoad]);
+
   // '추가' 버튼을 눌렀을 때 실행될 함수 (지금은 비워둡니다)
 // app/page.tsx 파일의 handleAddCard 함수 부분
  
