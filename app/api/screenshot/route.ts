@@ -64,8 +64,8 @@ export async function GET(request: Request) {
 
     // ❗️ [중요] 이 선택자들은 mhn.quest 사이트가 업데이트되면 또 실패할 수 있습니다.
     // 더 안정적인 ID(#)나 고유 클래스(예: .stat-group)를 찾는 것이 좋습니다.
-    const startSelector = 'div.main.ko.svelte-1oecyh1';
-    const endSelector = 'div.main.ko.svelte-1oecyh1';
+    const startSelector = 'div.main.ko';
+    const endSelector = 'div.main.ko';
 
     try {
       // 1. [추가] 끝 요소가 렌더링될 때까지 최대 5초간 기다립니다.
