@@ -1,54 +1,18 @@
-// app/api/screenshot/route.ts (최종 수정본)
+// app/api/screenshot/route.ts (최종 정리 버전)
 
 import { NextResponse } from 'next/server';
 import puppeteer from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
 
-const CARDS_KEY = 'global_cards';
+// 한국어 버튼과 스크린샷 영역을 찾기 위한 선택자는 사용자님이 직접 찾은 값으로 교체해야 합니다.
+const KOREAN_BUTTON_SELECTOR = '#app > div.settings.svelte-ghcjle > div > div > select > option:nth-child(4)'; // 예: '#app > header > button.lang-ko'; // ⚠️ [필수] 한국어 버튼의 실제 CSS 선택자로 교체하세요.
+const START_SELECTOR = '#app > div.main.en.svelte-1oecyh1 > div:nth-child(6)'; // ⚠️ [필수] 스크린샷 시작 영역의 안정적인 선택자로 교체하세요.
+const END_SELECTOR = '#app > div.main.en.svelte-1oecyh1 > div.drift-buff.mobile.svelte-1oecyh1'; // ⚠️ [필수] 스크린샷 끝 영역의 안정적인 선택자로 교체하세요.
 
-/**
- * GET 요청: 저장된 카드 목록 전체를 불러옵니다.
- */
-export async function GET() {
-  console.log('--- [API] GET /api/cards: 카드 불러오기 시도 ---');
-  try {
-    const cards = await kv.get(CARDS_KEY);
-    
-    if (!cards) {
-      console.log('--- [API] GET: 저장된 카드가 없음 (null). 빈 배열 반환.');
-      return NextResponse.json([]);
-    }
-    
-    console.log(`--- [API] GET: 카드 ${Array.isArray(cards) ? cards.length : '??'}개 불러오기 성공.`);
-    return NextResponse.json(cards);
-    
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error('--- [API] GET: 카드 불러오기 실패!', errorMessage);
-    return NextResponse.json({ error: 'Failed to fetch data', details: errorMessage }, { status: 500 });
-  }
-}
+// 모바일 User-Agent
+const MOBILE_USER_AGENT = 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1';
 
-/**
- * POST 요청: 새로운 카드 목록 '전체'를 덮어씁니다.
- */
-export async function POST(request: Request) {
-  console.log('--- [API] POST /api/cards: 카드 저장 시도 ---');
-  try {
-    const newCards = await request.json();
-    
-    await kv.set(CARDS_KEY, newCards);
-    
-    console.log(`--- [API] POST: 카드 ${newCards.length}개 저장 성공.`);
-    return NextResponse.json({ success: true, savedCards: newCards });
-    
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error('--- [API] POST: 카드 저장 실패!', errorMessage);
-    return NextResponse.json({ error: 'Failed to save data', details: errorMessage }, { status: 500 });
-  }
-}
-
+// 메인 함수
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const url = searchParams.get('url');
@@ -60,129 +24,67 @@ export async function GET(request: Request) {
   let browser = null;
 
   try {
-    // --- ⬇️ 이 부분이 핵심 수정 사항 ⬇️ ---
-    
-    const MOBILE_USER_AGENT = 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1';
-    // --- ⬆️ 여기까지 ⬆️ ---
-    // 현재 환경이 프로덕션(Vercel)인지 확인
-//     const isProd = process.env.NODE_ENV === 'production';
-
-//     // 1. 실행 경로 설정
-//     const executablePath = isProd
-//       ? await chromium.executablePath()
-//       : '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-    
-// // 2. 헤드리스 옵션 설정
-//     const headless = isProd 
-//       ? true  // [수정] 'chromium.headless'가 아니라 'true'입니다. (Vercel은 항상 true)
-//       : true; // 로컬 환경 (false로 두면 창이 뜹니다. true로 바꿔도 됩니다)
-    
-//     // 3. 실행 인수(args) 설정
-//     const args = isProd 
-//       ? chromium.args 
-//       : []; // ❗️[수정] 개발 환경에선 충돌 방지를 위해 빈 배열 전달
-
-
-    // 1. 실행 경로 설정
+    // 1. 브라우저 실행 설정 (Docker 환경에서는 항상 Chromium 사용)
     const executablePath = await chromium.executablePath();
-    
-    // 2. 헤드리스 옵션 설정 (컨테이너는 항상 true)
-    const headless = true; 
-    
-    // 3. 실행 인수(args) 설정
-    const args = chromium.args;
-    // --- ⬆️ 여기까지 ⬆️ ---
+    const headless = true; // 서버에서는 항상 true (창 안 띄움)
+    const args = chromium.args; 
 
-
-    // Vercel 서버(또는 내 PC)에서 크롬 브라우저를 실행
     browser = await puppeteer.launch({
-      args: args, // 'args' 변수 사용
+      args: args, 
       executablePath: executablePath,
       headless: headless,
-    //   ignoreHTTPSErrors: true,
     });
 
     const page = await browser.newPage();
-
-    // 2. User-Agent를 모바일로 설정합니다. (goto보다 먼저!)
+    
+    // 2. 언어 및 뷰포트 설정
     await page.setUserAgent(MOBILE_USER_AGENT); 
-
-    // 3. 뷰포트를 설정합니다. (isMobile: true도 중요)
     await page.setViewport({ width: 390, height: 844, isMobile: true });
     
-    const urlWithLang = `${url}&lang=ko`;
-
+    // 한국어 선호 헤더 추가
     await page.setExtraHTTPHeaders({
       'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7'
     });
     
-    await page.goto(url, { waitUntil: 'networkidle0' });
+    await page.goto(url, { 
+      waitUntil: 'networkidle0', 
+      referrer: 'https://www.google.com/', 
+    });
 
-    // try {
-    //   // 1. [추가] 자바스크립트가 <div class="main">에 "ko" 클래스를
-    //   //    추가할 때까지 최대 5초간 기다립니다.
-    //   await page.waitForFunction(
-    //     () => document.querySelector('div.main')?.classList.contains('ko'),
-    //     { timeout: 5000 }
-    //   );
-    // } catch (langError) {
-    //   // 5초간 기다려도 '.ko' 클래스가 적용되지 않으면 여기서 실패합니다.
-    //   console.error('Failed to wait for .ko class assignment');
-    //   if (browser) await browser.close();
-    //   // 'unknown' 타입 오류를 해결하기 위해 'errorMessage' 변수를 사용합니다.
-    //   const errorMessage = langError instanceof Error ? langError.message : String(langError);
-
-    //   return NextResponse.json(
-    //     { error: 'Failed to detect Korean language (.ko class timeout)', details: errorMessage },
-    //     { status: 500 }
-    //   );
-    // }
-
-    // ❗️ [중요] 이 선택자들은 mhn.quest 사이트가 업데이트되면 또 실패할 수 있습니다.
-    // 더 안정적인 ID(#)나 고유 클래스(예: .stat-group)를 찾는 것이 좋습니다.
-
-    const KOREAN_BUTTON_SELECTOR = '#app > div.settings.svelte-ghcjle > div > div > select > option:nth-child(4)'; // 예: '#app > header > button.lang-ko'
-
-    const startSelector = '#app > div.main.en.svelte-1oecyh1 > div:nth-child(6)';
-    const endSelector = '#app > div.main.en.svelte-1oecyh1 > div.drift-buff.mobile.svelte-1oecyh1';
-
+    // 3. 한국어 버튼 클릭 및 컨텐츠 대기
     try {
-
-      // 2. 한국어 버튼이 나타날 때까지 10초간 기다립니다.
-      // await page.waitForSelector(KOREAN_BUTTON_SELECTOR, { timeout: 20000 });
-      
-      // // 3. 한국어 버튼을 클릭합니다.
+      // 한국어 버튼이 나타날 때까지 기다린 후 클릭 (언어 변경)
+      // await page.waitForSelector(KOREAN_BUTTON_SELECTOR, { timeout: 10000 });
       // await page.click(KOREAN_BUTTON_SELECTOR);
       
-      await page.waitForSelector(endSelector, { timeout: 10000 });
+      // 컨텐츠가 변경되고 스크린샷 끝 요소가 렌더링될 때까지 기다립니다.
+      await page.waitForSelector(END_SELECTOR, { timeout: 10000 });
+
     } catch (waitError) {
-      // 5초간 기다려도 요소를 찾지 못하면, 선택자가 깨졌거나 페이지가 잘못된 것.
-      console.error(`Failed to find element with selector: ${endSelector}`);
+      // 10초 내에 버튼 클릭이나 컨텐츠 로드에 실패한 경우
+      console.error(`Failed to find UI element or content: ${waitError.message}`);
+      
+      // 디버그 스크린샷을 찍어 무엇이 보이는지 확인
       const debugBuffer = await page.screenshot({ type: 'png', encoding: 'base64' });
-      await browser.close(); // 브라우저 닫기
+      await browser.close();
 
       const errorMessage = waitError instanceof Error ? waitError.message : String(waitError);
-      
-      // 500 에러를 반환하되, 디버그 스크린샷을 JSON에 포함시킵니다.
       return NextResponse.json(
         { 
-          error: `Waiting for selector \`${endSelector}\` failed`, 
+          error: `Failed to find element \`${END_SELECTOR}\` (Timeout or Selector Break)`, 
           details: errorMessage,
-          debugScreenshotBase64: debugBuffer // 디버그 스크린샷 첨부
+          debugScreenshotBase64: debugBuffer
         },
         { status: 500 }
       );
     }
-
-    // 2. 각 요소를 찾습니다. (이제 확실히 존재함)
-    const startElement = await page.$(startSelector);
-    const endElement = await page.$(endSelector);
+    
+    // 4. 스크린샷 영역 계산 및 촬영
+    const startElement = await page.$(START_SELECTOR);
+    const endElement = await page.$(END_SELECTOR);
 
     let buffer;
-
-    // 3. 두 요소가 모두 존재할 때만 영역 계산
     if (startElement && endElement) {
-      // ... (boundingBox 및 clip 계산 로직은 동일)
       const startBox = await startElement.boundingBox();
       const endBox = await endElement.boundingBox();
 
@@ -195,33 +97,26 @@ export async function GET(request: Request) {
         };
         buffer = await page.screenshot({ type: 'png', encoding: 'base64', clip: clip });
       } else {
+        // 좌표 계산 실패 시 전체 스크린샷
         buffer = await page.screenshot({ type: 'png', encoding: 'base64' });
       }
     } else {
+      // 요소 찾기 실패 시 전체 스크린샷
       buffer = await page.screenshot({ type: 'png', encoding: 'base64' });
     }
 
     await browser.close();
-
     return NextResponse.json({ screenshotBase64: buffer });
 
   } catch (error) {
-    console.error(error);
+    console.error("--- Critical Error in GET API ---", error);
     if (browser) {
-      await browser.close();
+      // 브라우저가 실행 중이었다면 닫기
+      await browser.close(); 
     }
-
-    // 1. 에러 메시지를 담을 변수 생성
-    let errorMessage = 'An unknown error occurred';
-
-    // 2. error가 'Error' 객체의 인스턴스(instance)인지 확인
-    if (error instanceof Error) {
-      errorMessage = error.message; // 맞으면 .message 속성을 사용
-    }
-
-    // 3. 'details'에 error.message 대신 'errorMessage' 변수를 사용
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { error: 'Failed to take screenshot', details: errorMessage },
+      { error: 'Critical Browser Launch Failure', details: errorMessage },
       { status: 500 }
     );
   }
