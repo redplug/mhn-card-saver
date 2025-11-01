@@ -94,7 +94,7 @@ export async function GET(request: Request) {
     });
     
     await page.goto(url, { 
-      waitUntil: 'domcontentloaded', 
+      waitUntil: 'networkidle0', 
       referrer: 'https://www.google.com/', 
       timeout: 60000,
     });
@@ -107,7 +107,7 @@ export async function GET(request: Request) {
       // 2. [핵심 수정] select()를 사용해 드롭다운 값을 변경하고, 페이지 재로딩을 기다립니다.
       const selectAndReload = Promise.all([
           // 페이지 재로딩 대기
-          page.waitForNavigation({ waitUntil: 'domcontentloaded' }), 
+          page.waitForNavigation({ waitUntil: 'networkidle0' }), 
           // 드롭다운 요소에서 'ko' 값을 선택
           page.select(KOREAN_DROPDOWN_SELECTOR, KOREAN_LANG_VALUE) 
       ]);
