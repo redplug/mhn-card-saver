@@ -45,19 +45,26 @@ export default function Home() {
       const res = await fetch(`/api/screenshot?url=${encodeURIComponent(urlInput)}`);
 
       if (!res.ok) {
-        // API가 실패하면, API가 보낸 JSON 에러 메시지를 읽습니다.
         const errorData = await res.json();
+        
+        // 1. API가 보낸 JSON에 'debugScreenshotBase64'가 있는지 확인합니다.
+        if (errorData.debugScreenshotBase64) {
+          // 2. "에러 디버그 카드"를 생성합니다.
+          const errorCard: CardType = {
+            id: Date.now(),
+            url: urlInput,
+            screenshot: `data:image/png;base64,${errorData.debugScreenshotBase64}`,
+            name: "⚠️ 스크린샷 실패 (디버그 화면)"
+          };
+          setCards([errorCard, ...cards]); // 카드 목록에 추가
+          setIsLoading(false);
+          alert(`오류: 스크린샷 영역을 찾지 못했습니다. 무엇이 보이는지 디버그 카드를 확인해주세요.`);
+          return; // 함수 종료
+        }
 
+        // 3. 디버그 스크린샷이 없으면, 기존처럼 에러 메시지를 띄웁니다.
         const message = errorData.error || errorData.details || '스크린샷 생성에 실패했습니다.';
         throw new Error(message);
-
-        const data = await res.json();
-        // API의 catch 블록에 있는 'details' 메시지를 가져옵니다.
-        throw new Error(errorData.details || '스크린샷 생성에 실패했습니다.');
-      }
-
-      if (!res.ok) { // API가 에러를 반환하면
-        throw new Error('스크린샷 생성에 실패했습니다.');
       }
 
       const data = await res.json(); // API가 보내준 JSON 데이터를 받음
