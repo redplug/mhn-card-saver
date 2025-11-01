@@ -15,13 +15,6 @@ type CardProps = {
 export default function Card({ card, onDelete, onNameChange }: CardProps) {
   return (
     <div className="border rounded-xl shadow-lg overflow-hidden bg-white">
-      {/* 1. 스크린샷 이미지 */}
-      <img 
-        src={card.screenshot} 
-        alt={`${card.name} screenshot`} 
-        className="w-full border-b" 
-      />
-
       <div className="p-4 space-y-4">
         {/* 2. 빌드명 입력 텍스트 박스 */}
         <input
@@ -49,6 +42,12 @@ export default function Card({ card, onDelete, onNameChange }: CardProps) {
           >
             삭제
           </button>
+          {/* 1. 스크린샷 이미지 */}
+          <img 
+            src={card.screenshot} 
+            alt={`${card.name} screenshot`} 
+            className="w-full border-b" 
+          />
         </div>
       </div>
     </div>
