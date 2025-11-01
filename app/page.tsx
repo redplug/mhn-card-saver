@@ -15,10 +15,10 @@ interface ClientFormProps {
   urlInput: string;
   searchTerm: string;
   isLoading: boolean;
+  // 핸들러 함수들은 useCallback으로 감싸져 props로 전달됩니다.
   handleAddCard: (e: React.FormEvent<HTMLFormElement>) => void;
   setUrlInput: (value: string) => void;
   setSearchTerm: (value: string) => void;
-  searchRef: React.RefObject<HTMLInputElement>;
 }
 
 // --- [분리] ClientForm 컴포넌트 정의 (Home 함수 밖으로 이동) ---
@@ -29,7 +29,6 @@ const ClientForm = ({
   handleAddCard,
   setUrlInput,
   setSearchTerm,
-  searchRef,
 }: ClientFormProps) => (
   <>
     {/* URL 입력 폼 */}
@@ -51,14 +50,13 @@ const ClientForm = ({
       </button>
     </form>
     
-    {/* 검색 입력창 */}
+    {/* 검색 입력창 (여기가 문제의 입력창입니다) */}
     <div className="mb-8">
       <input
         type="text"
-        // ⬇️ [수정] searchRef를 input 요소에 연결 ⬇️
-        ref={searchRef}
         value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
+        // [핵심] 상태 setter 함수를 직접 사용하여 단순화 (불필요한 로직 제거)
+        onChange={(e) => setSearchTerm(e.target.value)} 
         placeholder="빌드명으로 검색하세요..."
         className="w-full border p-3 rounded-lg focus:ring-blue-500 focus:border-blue-500"
       />
@@ -163,7 +161,8 @@ export default function Home() {
             screenshot: `data:image/png;base64,${errorData.debugScreenshotBase64}`,
             name: "⚠️ 스크린샷 실패 (디버그 화면)"
           };
-          setCards(prevCards => [errorCard, ...prevCards]);
+          // [핵심] 함수형 업데이트 사용
+          setCards(prevCards => [errorCard, ...prevCards]); 
           setIsLoading(false);
           alert(`오류: 스크린샷 영역을 찾지 못했습니다. 무엇이 보이는지 디버그 카드를 확인해주세요.`);
           return;
@@ -182,7 +181,8 @@ export default function Home() {
           screenshot: `data:image/png;base64,${data.screenshotBase64}`, 
           name: "새 빌드",
         };
-        setCards(prevCards => [newCard, ...prevCards]);
+        // [핵심] 함수형 업데이트 사용
+        setCards(prevCards => [newCard, ...prevCards]); 
         setUrlInput("");
       }
 
@@ -193,21 +193,23 @@ export default function Home() {
     }
 
     setIsLoading(false);
-  }, [urlInput, cards]);
+  }, [urlInput, cards]); // 의존성: urlInput, cards
 
   // --- 카드 수정/삭제 핸들러 ---
   const handleDeleteCard = useCallback((id: number) => {
     const isConfirmed = window.confirm(`정말로 이 빌드를 삭제하시겠습니까?`);
     if (isConfirmed) {
+      // [핵심] 함수형 업데이트 사용
       setCards(prevCards => prevCards.filter(card => card.id !== id));
     }
-  }, []);
+  }, []); // 의존성 없음
 
   const handleNameChange = useCallback((id: number, newName: string) => {
+    // [핵심] 함수형 업데이트 사용
     setCards(prevCards => prevCards.map(card => 
       card.id === id ? { ...card, name: newName } : card
     ));
-  }, []);
+  }, []); // 의존성 없음
   
   // --- 최종 렌더링 (RETURN) ---
   return (
@@ -242,7 +244,7 @@ export default function Home() {
           </p>
         )}
 
-        {/* 🚨 [수정] 카드 목록 또는 빈 목록 메시지를 렌더링합니다. */}
+        {/* 🚨 [최적화] 카드 목록 또는 빈 목록 메시지를 렌더링합니다. */}
         {filteredCards.length > 0 ? (
           filteredCards.map(card => (
             <Card
@@ -253,7 +255,7 @@ export default function Home() {
             />
           ))
         ) : (
-          // 🚨 [핵심 수정] 검색 결과가 없을 때 높이를 고정하여 DOM 변동을 최소화합니다.
+          // 🚨 검색 결과가 없을 때 높이를 고정하여 DOM 변동을 최소화합니다.
           <div className="min-h-[100px] flex items-center justify-center">
             {cards.length === 0 && !isLoading ? (
               <p className="text-center text-gray-500">아직 추가된 빌드가 없습니다.</p>
