@@ -30,7 +30,7 @@ export async function GET(request: Request) {
 // 2. 헤드리스 옵션 설정
     const headless = isProd 
       ? true  // [수정] 'chromium.headless'가 아니라 'true'입니다. (Vercel은 항상 true)
-      : false; // 로컬 환경 (false로 두면 창이 뜹니다. true로 바꿔도 됩니다)
+      : true; // 로컬 환경 (false로 두면 창이 뜹니다. true로 바꿔도 됩니다)
     
     // 3. 실행 인수(args) 설정
     const args = isProd 
