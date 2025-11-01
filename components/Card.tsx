@@ -3,6 +3,20 @@ import { CardProps } from '@/types'; // CardProps 타입 정의 파일 경로 �
 export default function Card({ card, onDelete, onNameChange }: CardProps) {
   // ⚠️ [제거] 복사 기능 관련 useState와 useCallback은 모두 삭제되었습니다.
 
+  // 1. [추가] 삭제 확인 핸들러 함수
+  const handleDeleteClick = () => {
+    // 윈도우 기본 confirm 팝업을 띄웁니다.
+    const isConfirmed = window.confirm(
+      `"${card.name}" 빌드를 정말로 삭제하시겠습니까?`
+    );
+
+    if (isConfirmed) {
+      // 사용자가 "확인"을 눌렀을 때만 부모 컴포넌트의 삭제 함수 호출
+      onDelete(card.id);
+    }
+    // 사용자가 "취소"를 누르면 아무 일도 일어나지 않습니다.
+  };
+
   return (
     <div className="
       relative border rounded-2xl shadow-xl overflow-hidden bg-white
@@ -46,7 +60,8 @@ export default function Card({ card, onDelete, onNameChange }: CardProps) {
 
           {/* 3. 삭제 버튼 */}
           <button
-            onClick={() => onDelete(card.id)}
+            // 2. [수정] onClick 핸들러를 새로 정의한 함수로 변경
+            onClick={handleDeleteClick} 
             className="
               bg-red-500 text-white px-4 py-2 rounded-lg font-medium
               hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50
