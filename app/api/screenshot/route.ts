@@ -101,18 +101,20 @@ export async function GET(request: Request) {
 
     // 3. 한국어 버튼 클릭 및 컨텐츠 대기
     try {
-      // 1. 드롭다운 요소가 나타날 때까지 기다립니다. (30초로 늘려 안정성 확보)
-      await page.waitForSelector(KOREAN_DROPDOWN_SELECTOR, { timeout: 30000 });
+      // 1. [수정] 드롭다운 요소가 '클릭 가능'할 때까지 기다립니다.
+      //    (visible: true 대신 'visible' 속성을 사용하며, timeout은 30초)
+      await page.waitForSelector(KOREAN_DROPDOWN_SELECTOR, { timeout: 30000, visible: true });
       
-      // 2. [핵심 수정] Promise.all 및 waitForNavigation을 제거하고, select만 실행합니다.
-      //    (select는 페이지 재로딩 없이 콘텐츠만 바꾼다고 가정)
+      // 2. [수정] select 실행 전에 500ms 딜레이를 추가합니다. (안전장치)
+      await page.waitForTimeout(500); 
+
+      // 3. select 실행 (페이지 재로딩 대기 없음)
       await page.select(KOREAN_DROPDOWN_SELECTOR, KOREAN_LANG_VALUE);
       
-      // 3. [추가] select 후 렌더링이 완료될 시간을 주기 위해 1초 대기 (안전장치)
-      await page.waitForTimeout(1000); // 1초 대기
+      // 4. [수정] select 후, 컨텐츠 로딩 시간을 2초로 늘립니다.
+      await page.waitForTimeout(2000); 
       
-      // 4. [가장 중요] 스크린샷 끝 요소가 화면에 나타날 때까지 기다립니다.
-      //    모든 대기는 이 요소의 등장에만 의존합니다.
+      // 5. 스크린샷 끝 요소 대기 (30초)
       await page.waitForSelector(END_SELECTOR, { timeout: 30000 });
 
     } catch (waitError) {
