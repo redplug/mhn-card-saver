@@ -54,8 +54,8 @@ export async function GET(request: Request) {
     // 3. 한국어 버튼 클릭 및 컨텐츠 대기
     try {
       // 한국어 버튼이 나타날 때까지 기다린 후 클릭 (언어 변경)
-      // await page.waitForSelector(KOREAN_BUTTON_SELECTOR, { timeout: 10000 });
-      // await page.click(KOREAN_BUTTON_SELECTOR);
+      await page.waitForSelector(KOREAN_BUTTON_SELECTOR, { timeout: 10000 });
+      await page.click(KOREAN_BUTTON_SELECTOR);
       
       // 컨텐츠가 변경되고 스크린샷 끝 요소가 렌더링될 때까지 기다립니다.
       await page.waitForSelector(END_SELECTOR, { timeout: 10000 });
