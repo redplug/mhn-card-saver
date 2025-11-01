@@ -93,10 +93,10 @@ export async function GET(request: Request) {
     const endSelector = '#app > div.main.en.svelte-1oecyh1 > div.drift-buff.mobile.svelte-1oecyh1';
 
     try {
-      1. [추가] 끝 요소가 렌더링될 때까지 최대 5초간 기다립니다.
-      (이것이 타이밍 문제를 해결해 줄 것입니다.)
+      // 1. [추가] 끝 요소가 렌더링될 때까지 최대 5초간 기다립니다.
+      // (이것이 타이밍 문제를 해결해 줄 것입니다.)
 
-      2. 한국어 버튼이 나타날 때까지 10초간 기다립니다.
+      // 2. 한국어 버튼이 나타날 때까지 10초간 기다립니다.
       await page.waitForSelector(KOREAN_BUTTON_SELECTOR, { timeout: 10000 });
       
       // 3. 한국어 버튼을 클릭합니다.
