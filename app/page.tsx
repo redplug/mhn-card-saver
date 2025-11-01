@@ -32,11 +32,11 @@ export default function Home() {
 
   // '추가' 버튼을 눌렀을 때 실행될 함수 (지금은 비워둡니다)
 // app/page.tsx 파일의 handleAddCard 함수 부분
-
+ 
   const handleAddCard = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); // 페이지 새로고침 방지
     if (!urlInput) return; // URL이 비어있으면 중단
-
+   // 내용 추가  
     setIsLoading(true); // 로딩 시작!
 
     try {
