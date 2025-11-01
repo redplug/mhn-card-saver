@@ -41,6 +41,29 @@ export async function GET(request: Request) {
 
     const page = await browser.newPage();
 
+    // --- ⬇️ [핵심 수정: 광고 및 분석 요청 차단] ⬇️ ---
+    
+    await page.setRequestInterception(true); // 요청 가로채기 활성화
+    
+    page.on('request', (request) => {
+      // 차단할 URL 패턴을 정의합니다. (광고, 분석, 폰트/이미지 등)
+      const url = request.url();
+      if (
+        url.includes('google-analytics.com') ||
+        url.includes('googletagmanager.com') ||
+        url.includes('googlesyndication.com') ||
+        url.includes('cloudflareinsights.com') ||
+        request.resourceType() === 'media' || // 동영상, 음성 파일 차단
+        request.resourceType() === 'image'    // 이미지 파일 차단 (선택적)
+      ) {
+        request.abort(); // 요청을 차단하고 즉시 종료
+      } else {
+        request.continue(); // 그 외 요청은 계속 진행
+      }
+    });
+
+    // --- ⬆️ 광고 차단 로직 끝 ⬆️ ---
+
     // --- ⬇️ [핵심 디버깅 코드 추가] ⬇️ ---
     
     // 1. 브라우저 콘솔 로그를 서버 터미널에 출력
@@ -70,7 +93,7 @@ export async function GET(request: Request) {
     });
     
     await page.goto(url, { 
-      waitUntil: 'networkidle0', 
+      waitUntil: 'domcontentloaded', 
       referrer: 'https://www.google.com/', 
       timeout: 60000,
     });
@@ -83,7 +106,7 @@ export async function GET(request: Request) {
       // 2. [핵심 수정] select()를 사용해 드롭다운 값을 변경하고, 페이지 재로딩을 기다립니다.
       const selectAndReload = Promise.all([
           // 페이지 재로딩 대기
-          page.waitForNavigation({ waitUntil: 'networkidle0' }), 
+          page.waitForNavigation({ waitUntil: 'domcontentloaded' }), 
           // 드롭다운 요소에서 'ko' 값을 선택
           page.select(KOREAN_DROPDOWN_SELECTOR, KOREAN_LANG_VALUE) 
       ]);
