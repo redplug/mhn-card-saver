@@ -4,6 +4,8 @@ import { NextResponse } from 'next/server';
 import puppeteer from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
 
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 // 한국어 버튼과 스크린샷 영역을 찾기 위한 선택자는 사용자님이 직접 찾은 값으로 교체해야 합니다.
 // [추가] 드롭다운의 value 값을 설정합니다.
 const KOREAN_LANG_VALUE = 'ko'; // ⚠️ [필수] 실제 웹사이트의 <option value="..."> 값으로 교체하세요.
@@ -114,8 +116,6 @@ export async function GET(request: Request) {
       ]);
       
       await selectAndReload; // 선택 및 재로딩 완료 대기
-      // 4. [수정] select 후, 컨텐츠 로딩 시간을 2초로 늘립니다.
-      await page.waitForTimeout(5000); 
       
       // 5. 스크린샷 끝 요소 대기 (30초)
       await page.waitForSelector(END_SELECTOR, { timeout: 30000 });
