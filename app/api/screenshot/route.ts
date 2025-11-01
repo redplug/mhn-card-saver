@@ -97,10 +97,10 @@ export async function GET(request: Request) {
       // (이것이 타이밍 문제를 해결해 줄 것입니다.)
 
       // 2. 한국어 버튼이 나타날 때까지 10초간 기다립니다.
-      await page.waitForSelector(KOREAN_BUTTON_SELECTOR, { timeout: 10000 });
+      // await page.waitForSelector(KOREAN_BUTTON_SELECTOR, { timeout: 10000 });
       
-      // 3. 한국어 버튼을 클릭합니다.
-      await page.click(KOREAN_BUTTON_SELECTOR);
+      // // 3. 한국어 버튼을 클릭합니다.
+      // await page.click(KOREAN_BUTTON_SELECTOR);
       
       await page.waitForSelector(endSelector, { timeout: 10000 });
     } catch (waitError) {
