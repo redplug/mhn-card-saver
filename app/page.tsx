@@ -97,6 +97,8 @@ export default function Home() {
             description: card.description || "",
             // createdAt이 없으면 id를 등록날짜로 사용 (기존 데이터 호환성)
             createdAt: card.createdAt || card.id,
+            weaponBaseMonster: card.weaponBaseMonster || card.monster || undefined,
+            weaponType: card.weaponType || card.weapon || undefined,
         }));
         
         setCards(safeData);
@@ -214,7 +216,13 @@ export default function Home() {
           screenshot: `data:image/png;base64,${data.screenshotBase64}`, 
           name: "새 빌드",
           description: "", // [추가] 새로운 카드를 만들 때 description 초기화
-          createdAt: now
+          createdAt: now,
+          monster: data.monster || undefined,
+          weapon: data.weapon || undefined,
+          weaponBaseMonster: data.weaponBaseMonster || undefined,
+          weaponType: data.weaponType || undefined,
+          monsterIconUrl: data.monsterIconUrl || undefined,
+          weaponTypeIconUrl: data.weaponTypeIconUrl || undefined
         };
         // [핵심] 함수형 업데이트 사용
         setCards(prevCards => [newCard, ...prevCards]); 
@@ -224,7 +232,7 @@ export default function Home() {
     } catch (error) {
       console.error(error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      // 경고: Canvas 환경에서는 alert 대신 커스텀 UI를 사용하세요.
+      // 경고: Canvas 환경에서는 alert 대신 커스텀 UI를 사용하세요。
       alert("오류가 발생했습니다: " + errorMessage);
     }
 
@@ -233,12 +241,9 @@ export default function Home() {
 
   // --- 카드 수정/삭제 핸들러 ---
   const handleDeleteCard = useCallback((id: number) => {
-    // 경고: Canvas 환경에서는 window.confirm/alert 사용이 권장되지 않습니다.
-    const isConfirmed = window.confirm(`정말로 이 빌드를 삭제하시겠습니까?`);
-    if (isConfirmed) {
-      // [핵심] 함수형 업데이트 사용
-      setCards(prevCards => prevCards.filter(card => card.id !== id));
-    }
+    // Card 컴포넌트에서 이미 확인 팝업이 있으므로 여기서는 바로 삭제
+    // [핵심] 함수형 업데이트 사용
+    setCards(prevCards => prevCards.filter(card => card.id !== id));
   }, []); // 의존성 없음
 
   const handleNameChange = useCallback((id: number, newName: string) => {

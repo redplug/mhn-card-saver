@@ -7,6 +7,12 @@ export type CardType = {
   name: string;
   description: string; // 새로운 필드: 여러 줄 설명
   createdAt?: number; // 등록날짜 (타임스탬프, 선택적 필드)
+  monster?: string; // 몬스터 정보
+  weapon?: string; // 무기 정보
+  weaponBaseMonster?: string; // 무기 베이스 몬스터
+  weaponType?: string; // 무기 종류
+  monsterIconUrl?: string; // 몬스터 아이콘 URL
+  weaponTypeIconUrl?: string; // 무기 종류 아이콘 URL
 };
 
 interface CardProps {
@@ -56,7 +62,34 @@ export default function Card({ card, onDelete, onNameChange, onDescriptionChange
       {/* 1. [수정] 패딩 p-5 -> p-3으로 축소, space-y-4 -> space-y-2로 축소 */}
       <div className="p-3 space-y-2 flex-shrink-0"> 
         
-        {/* 2-1. 빌드명 입력 텍스트 박스 및 등록날짜 */}
+        {/* 1-1. 몬스터, 무기 정보 및 등록날짜 */}
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-md flex items-center gap-1">
+            {card.monsterIconUrl ? (
+              <img src={card.monsterIconUrl} alt="Monster Icon" className="h-4 w-4" />
+            ) : (
+              '👹'
+            )}
+            {card.weaponBaseMonster || "무기 베이스"}
+          </span>
+          <span className="px-2 py-1 bg-yellow-700 text-white rounded-md flex items-center gap-1">
+            {card.weaponTypeIconUrl ? (
+              <img src={card.weaponTypeIconUrl} alt="Weapon Type Icon" className="h-4 w-4" />
+            ) : (
+              '🗡️'
+            )}
+            {card.weaponType || "무기 종류"}
+          </span>
+          <span className="text-xs text-gray-500 whitespace-nowrap flex-shrink-0 ml-auto">
+            {new Date(card.createdAt || card.id).toLocaleDateString('ko-KR', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit'
+            })}
+          </span>
+        </div>
+        
+        {/* 2-1. 빌드명 입력 텍스트 박스 */}
         <div className="flex items-center gap-2 min-w-0">
           <input
             type="text"
@@ -69,13 +102,6 @@ export default function Card({ card, onDelete, onNameChange, onDescriptionChange
             "
             aria-label="빌드 이름"
           />
-          <span className="text-xs text-gray-500 whitespace-nowrap flex-shrink-0">
-            {new Date(card.createdAt || card.id).toLocaleDateString('ko-KR', {
-              year: 'numeric',
-              month: '2-digit',
-              day: '2-digit'
-            })}
-          </span>
         </div>
 
         {/* 2-2. [새로 추가] 여러 줄 설명 기록 영역 (Textarea) */}
