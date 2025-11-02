@@ -254,7 +254,7 @@ export default function Home() {
       className="container mx-auto p-4 max-w-3xl"
       suppressHydrationWarning={true}
     >
-      <h1 className="text-3xl font-bold mb-6 text-center">MHN 빌드 세이버</h1>
+      <h1 className="text-3xl font-bold mb-6 text-center">Monster Hunter Now Build Save</h1>
 
       {/* 1. isClient 상태에 따라 폼을 조건부 렌더링 */}
       {isClient ? 

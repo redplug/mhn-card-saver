@@ -19,7 +19,9 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      // Ensure the @/types alias is defined, likely mapping to a 'types' folder
+      "@/types": ["./types/index.ts"] // or wherever your type definitions live
     }
   },
   "include": [
