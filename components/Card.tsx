@@ -1,4 +1,3 @@
-import { useState, useCallback } from 'react'; 
 // CardType 및 CardProps는 이제 이 파일 내에서 정의하고 export 합니다.
 
 export type CardType = {
@@ -7,6 +6,7 @@ export type CardType = {
   screenshot: string;
   name: string;
   description: string; // 새로운 필드: 여러 줄 설명
+  createdAt?: number; // 등록날짜 (타임스탬프, 선택적 필드)
 };
 
 interface CardProps {
@@ -55,18 +55,27 @@ export default function Card({ card, onDelete, onNameChange, onDescriptionChange
       {/* 1. [수정] 패딩 p-5 -> p-3으로 축소, space-y-4 -> space-y-2로 축소 */}
       <div className="p-3 flex-grow space-y-2"> 
         
-        {/* 1-1. 빌드명 입력 텍스트 박스 */}
-        <input
-          type="text"
-          value={card.name}
-          onChange={(e) => onNameChange(card.id, e.target.value)}
-          placeholder="빌드 이름"
-          className="
-            w-full text-base font-semibold border-b border-gray-300 p-1 rounded-sm
-            text-gray-800 focus:outline-none focus:border-blue-500
-          "
-          aria-label="빌드 이름"
-        />
+        {/* 1-1. 빌드명 입력 텍스트 박스 및 등록날짜 */}
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            value={card.name}
+            onChange={(e) => onNameChange(card.id, e.target.value)}
+            placeholder="빌드 이름"
+            className="
+              flex-1 text-base font-semibold border-b border-gray-300 p-1 rounded-sm
+              text-gray-800 focus:outline-none focus:border-blue-500
+            "
+            aria-label="빌드 이름"
+          />
+          <span className="text-xs text-gray-500 whitespace-nowrap">
+            {new Date(card.createdAt || card.id).toLocaleDateString('ko-KR', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit'
+            })}
+          </span>
+        </div>
 
         {/* 1-2. [새로 추가] 여러 줄 설명 기록 영역 (Textarea) */}
         <textarea

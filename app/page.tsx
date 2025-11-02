@@ -90,10 +90,13 @@ export default function Home() {
         const data: CardType[] = await res.json();
         
         // [수정] DB에서 불러온 데이터에 description 필드가 없을 경우 기본값 ""을 할당
+        // createdAt이 없을 경우 id를 사용 (기존 데이터 호환성)
         const safeData = data.map(card => ({
             ...card,
             // description 필드가 없거나(DB 마이그레이션 중) null이면 ""을 할당
-            description: card.description || "", 
+            description: card.description || "",
+            // createdAt이 없으면 id를 등록날짜로 사용 (기존 데이터 호환성)
+            createdAt: card.createdAt || card.id,
         }));
         
         setCards(safeData);
@@ -180,12 +183,14 @@ export default function Home() {
         
         // 디버그 스크린샷 카드 생성 (스크린샷 실패 시)
         if (errorData.debugScreenshotBase64) {
+          const now = Date.now();
           const errorCard: CardType = {
-            id: Date.now(),
+            id: now,
             url: urlInput,
             screenshot: `data:image/png;base64,${errorData.debugScreenshotBase64}`,
             name: "⚠️ 스크린샷 실패 (디버그 화면)",
-            description: "스크린샷 오류가 발생했습니다. 디버그 화면을 확인하세요." // description 추가
+            description: "스크린샷 오류가 발생했습니다. 디버그 화면을 확인하세요.", // description 추가
+            createdAt: now
           };
           // [핵심] 함수형 업데이트 사용
           setCards(prevCards => [errorCard, ...prevCards]); 
@@ -202,12 +207,14 @@ export default function Home() {
       const data = await res.json();
 
       if (data.screenshotBase64) {
+        const now = Date.now();
         const newCard: CardType = {
-          id: Date.now(),
+          id: now,
           url: urlInput,
           screenshot: `data:image/png;base64,${data.screenshotBase64}`, 
           name: "새 빌드",
           description: "", // [추가] 새로운 카드를 만들 때 description 초기화
+          createdAt: now
         };
         // [핵심] 함수형 업데이트 사용
         setCards(prevCards => [newCard, ...prevCards]); 
