@@ -13,6 +13,12 @@ interface ClientFormProps {
   handleAddCard: (e: React.FormEvent<HTMLFormElement>) => void;
   setUrlInput: (value: string) => void;
   setSearchTerm: (value: string) => void;
+  monsterFilters: string[];
+  selectedMonsters: string[];
+  handleMonsterFilterClick: (monsterName: string) => void;
+  weaponTypeFilters: string[];
+  selectedWeaponTypes: string[];
+  handleWeaponTypeFilterClick: (weaponType: string) => void;
 }
 
 // --- [분리] ClientForm 컴포넌트 정의 (Home 함수 밖으로 이동) ---
@@ -23,10 +29,16 @@ const ClientForm = ({
   handleAddCard,
   setUrlInput,
   setSearchTerm,
+  monsterFilters,
+  selectedMonsters,
+  handleMonsterFilterClick,
+  weaponTypeFilters,
+  selectedWeaponTypes,
+  handleWeaponTypeFilterClick,
 }: ClientFormProps) => (
   <>
     {/* URL 입력 폼 */}
-    <form onSubmit={handleAddCard} className="flex gap-2 mb-8">
+    <form onSubmit={handleAddCard} className="flex gap-2 mb-4">
       <input
         type="url"
         value={urlInput}
@@ -45,7 +57,7 @@ const ClientForm = ({
     </form>
     
     {/* 검색 입력창 */}
-    <div className="mb-8">
+    <div className="mb-4">
       <input
         type="text"
         value={searchTerm}
@@ -54,6 +66,30 @@ const ClientForm = ({
         placeholder="빌드명으로 검색하세요..."
         className="w-full border p-3 rounded-lg focus:ring-blue-500 focus:border-blue-500"
       />
+    </div>
+
+    {/* 몬스터 필터 버튼 */}
+    <div className="mb-4 flex flex-wrap gap-2">
+      {monsterFilters.map(monster => (
+        <button
+          key={monster}
+          onClick={() => handleMonsterFilterClick(monster)}
+          className={`px-2 py-1 rounded-md flex items-center gap-1 text-sm font-semibold ${selectedMonsters.includes(monster) ? 'bg-blue-500 text-white' : 'bg-blue-100 text-blue-800'}`}>
+          {monster}
+        </button>
+      ))}
+    </div>
+
+    {/* 무기 종류 필터 버튼 */}
+    <div className="mb-4 flex flex-wrap gap-2">
+      {weaponTypeFilters.map(weaponType => (
+        <button
+          key={weaponType}
+          onClick={() => handleWeaponTypeFilterClick(weaponType)}
+          className={`px-2 py-1 rounded-md flex items-center gap-1 text-sm font-semibold ${selectedWeaponTypes.includes(weaponType) ? 'bg-yellow-900 text-white' : 'bg-yellow-700 text-white'}`}>
+          {weaponType}
+        </button>
+      ))}
     </div>
   </>
 );
@@ -68,14 +104,26 @@ export default function Home() {
   const [cards, setCards] = useState<CardType[]>([]); 
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [searchTerm, setSearchTerm] = useState(""); 
+  const [selectedMonsters, setSelectedMonsters] = useState<string[]>([]);
+  const [selectedWeaponTypes, setSelectedWeaponTypes] = useState<string[]>([]);
   const [isClient, setIsClient] = useState(false); // 클라이언트 렌더링 확인
 
   // --- 파생 상태 (DERIVED STATE) ---
-  const filteredCards = cards.filter(card => 
-    card.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    // [추가] description 필드에서도 검색하도록 확장
-    card.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const monsterFilters = [...new Set(cards.map(card => card.weaponBaseMonster).filter((m): m is string => !!m))];
+  const weaponTypeFilters = [...new Set(cards.map(card => card.weaponType).filter((w): w is string => !!w))];
+
+  const filteredCards = cards.filter(card => {
+    const matchesSearchTerm = card.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      card.description.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesMonsterFilter = selectedMonsters.length === 0 || 
+      (card.weaponBaseMonster && selectedMonsters.includes(card.weaponBaseMonster));
+
+    const matchesWeaponTypeFilter = selectedWeaponTypes.length === 0 ||
+      (card.weaponType && selectedWeaponTypes.includes(card.weaponType));
+
+    return matchesSearchTerm && matchesMonsterFilter && matchesWeaponTypeFilter;
+  });
 
   // --- DB 로드 (EFFECT) ---
   useEffect(() => {
@@ -260,13 +308,33 @@ export default function Home() {
     ));
   }, []);
 
+  const handleMonsterFilterClick = (monsterName: string) => {
+    setSelectedMonsters(prevSelected => {
+      if (prevSelected.includes(monsterName)) {
+        return prevSelected.filter(m => m !== monsterName);
+      } else {
+        return [...prevSelected, monsterName];
+      }
+    });
+  };
+
+  const handleWeaponTypeFilterClick = (weaponType: string) => {
+    setSelectedWeaponTypes(prevSelected => {
+      if (prevSelected.includes(weaponType)) {
+        return prevSelected.filter(w => w !== weaponType);
+      } else {
+        return [...prevSelected, weaponType];
+      }
+    });
+  };
+
   // --- 최종 렌더링 (RETURN) ---
   return (
     <main 
       className="container mx-auto p-4 max-w-7xl"
       suppressHydrationWarning={true}
     >
-      <h1 className="text-3xl font-bold mb-6 text-center">Monster Hunter Now Build Save</h1>
+      <h1 className="text-3xl font-bold mb-6 text-center">MHNow Build</h1>
 
       {/* 1. isClient 상태에 따라 폼을 조건부 렌더링 */}
       {isClient ? 
@@ -277,6 +345,12 @@ export default function Home() {
           handleAddCard={handleAddCard}
           setUrlInput={setUrlInput}
           setSearchTerm={setSearchTerm}
+          monsterFilters={monsterFilters}
+          selectedMonsters={selectedMonsters}
+          handleMonsterFilterClick={handleMonsterFilterClick}
+          weaponTypeFilters={weaponTypeFilters}
+          selectedWeaponTypes={selectedWeaponTypes}
+          handleWeaponTypeFilterClick={handleWeaponTypeFilterClick}
         /> 
         : (
         <div className="h-24 mb-8 flex justify-center items-center text-gray-500">
