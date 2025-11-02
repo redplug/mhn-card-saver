@@ -30,10 +30,39 @@ export async function GET(request: Request) {
   let browser = null;
 
   try {
-    // 1. 브라우저 실행 설정 (Docker 환경에서는 항상 Chromium 사용)
-    const executablePath = await chromium.executablePath();
+    // 1. 브라우저 실행 설정 (개발/프로덕션 환경 구분)
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    
+    let executablePath: string;
+    let args: string[];
+    
+    if (isDevelopment) {
+      // 개발 환경 (macOS): 로컬 Chrome 사용
+      executablePath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+      args = [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--disable-gpu',
+        '--disable-web-security',
+        '--disable-features=IsolateOrigins,site-per-process'
+      ];
+      console.log('[DEV] Using local Chrome:', executablePath);
+    } else {
+      // 프로덕션 환경 (Docker): Chromium 사용
+      try {
+        executablePath = await chromium.executablePath();
+        args = chromium.args;
+        console.log('[PROD] Using Chromium from @sparticuz/chromium');
+      } catch (chromiumError) {
+        const errorMsg = chromiumError instanceof Error ? chromiumError.message : String(chromiumError);
+        console.error('[PROD] Failed to load Chromium:', errorMsg);
+        throw new Error(`Failed to initialize Chromium: ${errorMsg}`);
+      }
+    }
+    
     const headless = true; // 서버에서는 항상 true (창 안 띄움)
-    const args = chromium.args; 
 
     browser = await puppeteer.launch({
       args: args, 
