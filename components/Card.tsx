@@ -47,28 +47,29 @@ export default function Card({ card, onDelete, onNameChange, onDescriptionChange
   return (
     <div className="
       relative border rounded-lg shadow-md overflow-hidden bg-white
-      flex flex-col
+      flex flex-col justify-start
+      w-full h-auto
       transition-all duration-300 ease-in-out
       hover:shadow-lg
     ">
       
       {/* 1. [수정] 패딩 p-5 -> p-3으로 축소, space-y-4 -> space-y-2로 축소 */}
-      <div className="p-3 flex-grow space-y-2"> 
+      <div className="p-3 space-y-2 flex-shrink-0"> 
         
-        {/* 1-1. 빌드명 입력 텍스트 박스 및 등록날짜 */}
-        <div className="flex items-center gap-2">
+        {/* 2-1. 빌드명 입력 텍스트 박스 및 등록날짜 */}
+        <div className="flex items-center gap-2 min-w-0">
           <input
             type="text"
             value={card.name}
             onChange={(e) => onNameChange(card.id, e.target.value)}
             placeholder="빌드 이름"
             className="
-              flex-1 text-base font-semibold border-b border-gray-300 p-1 rounded-sm
+              flex-1 min-w-0 text-base font-semibold border-b border-gray-300 p-1 rounded-sm
               text-gray-800 focus:outline-none focus:border-blue-500
             "
             aria-label="빌드 이름"
           />
-          <span className="text-xs text-gray-500 whitespace-nowrap">
+          <span className="text-xs text-gray-500 whitespace-nowrap flex-shrink-0">
             {new Date(card.createdAt || card.id).toLocaleDateString('ko-KR', {
               year: 'numeric',
               month: '2-digit',
@@ -77,7 +78,7 @@ export default function Card({ card, onDelete, onNameChange, onDescriptionChange
           </span>
         </div>
 
-        {/* 1-2. [새로 추가] 여러 줄 설명 기록 영역 (Textarea) */}
+        {/* 2-2. [새로 추가] 여러 줄 설명 기록 영역 (Textarea) */}
         <textarea
           value={card.description}
           onChange={(e) => onDescriptionChange(card.id, e.target.value)}
@@ -91,11 +92,11 @@ export default function Card({ card, onDelete, onNameChange, onDescriptionChange
           aria-label="빌드 설명"
         />
 
-        {/* 2. 링크 및 버튼 그룹 */}
+        {/* 3. 링크 및 버튼 그룹 */}
         {/* [수정] mt-4 -> mt-2로 축소 */}
         <div className="flex justify-between items-center pt-2 border-t border-gray-100"> 
           
-          {/* 2-1. 빌드 페이지 이동 링크 */}
+          {/* 3-1. 빌드 페이지 이동 링크 */}
           <a
             href={card.url}
             target="_blank"
@@ -110,7 +111,7 @@ export default function Card({ card, onDelete, onNameChange, onDescriptionChange
             <span>이동</span>
           </a>
           
-          {/* 2-2. 삭제 버튼 */}
+          {/* 3-2. 삭제 버튼 */}
           <button
             onClick={handleDeleteClick}
             className="
@@ -125,9 +126,9 @@ export default function Card({ card, onDelete, onNameChange, onDescriptionChange
         </div>
       </div>
 
-      {/* 3. 스크린샷 이미지 */}
+      {/* 2. 스크린샷 이미지 (상단 정렬) */}
       {card.screenshot && ( 
-        <div className="bg-gray-50 p-1 border-t rounded-b-lg"> {/* [수정] 패딩 p-2 -> p-1로 축소 */}
+        <div className="bg-gray-50 p-1 border-t rounded-b-lg self-start flex-shrink-0"> {/* 상단 정렬 */}
           <img
             src={card.screenshot}
             alt={`${card.name} 스크린샷`}

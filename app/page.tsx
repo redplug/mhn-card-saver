@@ -258,7 +258,7 @@ export default function Home() {
   // --- 최종 렌더링 (RETURN) ---
   return (
     <main 
-      className="container mx-auto p-4 max-w-3xl"
+      className="container mx-auto p-4 max-w-7xl"
       suppressHydrationWarning={true}
     >
       <h1 className="text-3xl font-bold mb-6 text-center">Monster Hunter Now Build Save</h1>
@@ -279,26 +279,28 @@ export default function Home() {
         </div>
       )}
       
-      {/* 2. 카드 목록이 표시될 공간 */}
-      <div className="space-y-6">
+      {/* 2. 카드 목록이 표시될 공간 (반응형 그리드 레이아웃) */}
+      <div>
         {/* 로딩 상태 표시 */}
         {isLoading && (
-          <p className="text-center text-blue-500">
+          <p className="text-center text-blue-500 mb-6">
             스크린샷을 생성 중입니다...
           </p>
         )}
 
         {/* 🚨 [최적화] 카드 목록 또는 빈 목록 메시지를 렌더링합니다. */}
         {filteredCards.length > 0 ? (
-          filteredCards.map(card => (
-            <Card
-              key={card.id}
-              card={card}
-              onDelete={handleDeleteCard}
-              onNameChange={handleNameChange}
-              onDescriptionChange={handleDescriptionChange} // [추가] 새로운 핸들러 전달
-            />
-          ))
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 items-start">
+            {filteredCards.map(card => (
+              <Card
+                key={card.id}
+                card={card}
+                onDelete={handleDeleteCard}
+                onNameChange={handleNameChange}
+                onDescriptionChange={handleDescriptionChange} // [추가] 새로운 핸들러 전달
+              />
+            ))}
+          </div>
         ) : (
           // 🚨 검색 결과가 없을 때 높이를 고정하여 DOM 변동을 최소화합니다.
           <div className="min-h-[100px] flex items-center justify-center">
@@ -306,7 +308,7 @@ export default function Home() {
               <p className="text-center text-gray-500">아직 추가된 빌드가 없습니다.</p>
             ) : (
               !isLoading && (
-                <p className="text-center text-gray-500">'{searchTerm}'에 해당하는 빌드를 찾을 수 없습니다.</p>
+                <p className="text-center text-gray-500">&apos;{searchTerm}&apos;에 해당하는 빌드를 찾을 수 없습니다.</p>
               )
             )}
           </div>
