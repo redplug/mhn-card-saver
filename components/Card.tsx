@@ -80,6 +80,13 @@ export default function Card({ card, onDelete, onNameChange, onDescriptionChange
             )}
             {card.weaponType || "무기 종류"}
           </span>
+          <button
+            onClick={handleDeleteClick}
+            className="bg-red-500 text-white px-3 py-1 rounded-md text-sm font-medium hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors duration-200"
+            aria-label={`${card.name} 빌드 삭제`}
+          >
+            삭제
+          </button>
           <span className="text-xs text-gray-500 whitespace-nowrap flex-shrink-0 ml-auto">
             {new Date(card.createdAt || card.id).toLocaleDateString('ko-KR', {
               year: 'numeric',
@@ -96,12 +103,19 @@ export default function Card({ card, onDelete, onNameChange, onDescriptionChange
             value={card.name}
             onChange={(e) => onNameChange(card.id, e.target.value)}
             placeholder="빌드 이름"
-            className="
-              flex-1 min-w-0 text-base font-semibold border-b border-gray-300 p-1 rounded-sm
-              text-gray-800 focus:outline-none focus:border-blue-500
-            "
+            className="flex-1 min-w-0 text-base font-semibold border-b border-gray-300 p-1 rounded-sm text-gray-800 focus:outline-none focus:border-blue-500"
             aria-label="빌드 이름"
           />
+          <a
+            href={card.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 hover:underline text-sm font-medium flex items-center space-x-1 ml-auto"
+            aria-label={`${card.name} 빌드 페이지로 이동`}
+          >
+            <ArrowRightIcon className="h-4 w-4"/>
+            <span>이동</span>
+          </a>
         </div>
 
         {/* 2-2. [새로 추가] 여러 줄 설명 기록 영역 (Textarea) */}
@@ -110,46 +124,9 @@ export default function Card({ card, onDelete, onNameChange, onDescriptionChange
           onChange={(e) => onDescriptionChange(card.id, e.target.value)}
           placeholder="여기에 빌드에 대한 여러 줄 설명을 기록하세요."
           rows={3} // 표시될 기본 행 수 설정
-          className="
-            w-full text-sm border border-gray-300 p-2 rounded-md resize-none
-            text-gray-600 focus:outline-none focus:border-indigo-500
-            transition-shadow
-          "
+          className="w-full text-sm border border-gray-300 p-2 rounded-md resize-none text-gray-600 focus:outline-none focus:border-indigo-500 transition-shadow"
           aria-label="빌드 설명"
         />
-
-        {/* 3. 링크 및 버튼 그룹 */}
-        {/* [수정] mt-4 -> mt-2로 축소 */}
-        <div className="flex justify-between items-center pt-2 border-t border-gray-100"> 
-          
-          {/* 3-1. 빌드 페이지 이동 링크 */}
-          <a
-            href={card.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="
-              text-blue-600 hover:text-blue-800 hover:underline text-sm font-medium
-              flex items-center space-x-1
-            "
-            aria-label={`${card.name} 빌드 페이지로 이동`}
-          >
-            <ArrowRightIcon className="h-4 w-4"/> {/* 아이콘 크기 h-5 -> h-4로 축소 */}
-            <span>이동</span>
-          </a>
-          
-          {/* 3-2. 삭제 버튼 */}
-          <button
-            onClick={handleDeleteClick}
-            className="
-              bg-red-500 text-white px-3 py-1 rounded-md text-sm font-medium /* 패딩 및 텍스트 크기 축소 */
-              hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500
-              transition-colors duration-200
-            "
-            aria-label={`${card.name} 빌드 삭제`}
-          >
-            삭제
-          </button>
-        </div>
       </div>
 
       {/* 2. 스크린샷 이미지 (상단 정렬) */}

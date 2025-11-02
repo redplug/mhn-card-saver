@@ -19,6 +19,9 @@ interface ClientFormProps {
   weaponTypeFilters: string[];
   selectedWeaponTypes: string[];
   handleWeaponTypeFilterClick: (weaponType: string) => void;
+  monsterCounts: Record<string, number>;
+  weaponTypeCounts: Record<string, number>;
+  handleResetFilters: () => void;
 }
 
 // --- [분리] ClientForm 컴포넌트 정의 (Home 함수 밖으로 이동) ---
@@ -35,6 +38,9 @@ const ClientForm = ({
   weaponTypeFilters,
   selectedWeaponTypes,
   handleWeaponTypeFilterClick,
+  monsterCounts,
+  weaponTypeCounts,
+  handleResetFilters,
 }: ClientFormProps) => (
   <>
     {/* URL 입력 폼 */}
@@ -71,25 +77,38 @@ const ClientForm = ({
     {/* 몬스터 필터 버튼 */}
     <div className="mb-4 flex flex-wrap gap-2">
       {monsterFilters.map(monster => (
-        <button
-          key={monster}
-          onClick={() => handleMonsterFilterClick(monster)}
-          className={`px-2 py-1 rounded-md flex items-center gap-1 text-sm font-semibold ${selectedMonsters.includes(monster) ? 'bg-blue-500 text-white' : 'bg-blue-100 text-blue-800'}`}>
-          {monster}
-        </button>
+        (monsterCounts[monster] || 0) > 0 && (
+          <button
+            key={monster}
+            onClick={() => handleMonsterFilterClick(monster)}
+            className={`px-2 py-1 rounded-md flex items-center gap-1 text-sm font-semibold ${selectedMonsters.includes(monster) ? 'bg-blue-500 text-white' : 'bg-blue-100 text-blue-800'}`}>
+            {monster}
+            <span className="text-xs">({monsterCounts[monster] || 0})</span>
+          </button>
+        )
       ))}
     </div>
 
     {/* 무기 종류 필터 버튼 */}
     <div className="mb-4 flex flex-wrap gap-2">
       {weaponTypeFilters.map(weaponType => (
-        <button
-          key={weaponType}
-          onClick={() => handleWeaponTypeFilterClick(weaponType)}
-          className={`px-2 py-1 rounded-md flex items-center gap-1 text-sm font-semibold ${selectedWeaponTypes.includes(weaponType) ? 'bg-yellow-900 text-white' : 'bg-yellow-700 text-white'}`}>
-          {weaponType}
-        </button>
+        (weaponTypeCounts[weaponType] || 0) > 0 && (
+          <button
+            key={weaponType}
+            onClick={() => handleWeaponTypeFilterClick(weaponType)}
+            className={`px-2 py-1 rounded-md flex items-center gap-1 text-sm font-semibold ${selectedWeaponTypes.includes(weaponType) ? 'bg-yellow-900 text-white' : 'bg-yellow-700 text-white'}`}>
+            {weaponType}
+            <span className="text-xs">({weaponTypeCounts[weaponType] || 0})</span>
+          </button>
+        )
       ))}
+      {(selectedMonsters.length > 0 || selectedWeaponTypes.length > 0) && (
+        <button
+          onClick={handleResetFilters}
+          className="px-2 py-1 rounded-md flex items-center gap-1 text-sm font-semibold bg-red-500 text-white ml-auto">
+          초기화
+        </button>
+      )}
     </div>
   </>
 );
@@ -124,6 +143,20 @@ export default function Home() {
 
     return matchesSearchTerm && matchesMonsterFilter && matchesWeaponTypeFilter;
   });
+
+  const monsterCounts = filteredCards.reduce((acc, card) => {
+    if (card.weaponBaseMonster) {
+      acc[card.weaponBaseMonster] = (acc[card.weaponBaseMonster] || 0) + 1;
+    }
+    return acc;
+  }, {} as Record<string, number>);
+
+  const weaponTypeCounts = filteredCards.reduce((acc, card) => {
+    if (card.weaponType) {
+      acc[card.weaponType] = (acc[card.weaponType] || 0) + 1;
+    }
+    return acc;
+  }, {} as Record<string, number>);
 
   // --- DB 로드 (EFFECT) ---
   useEffect(() => {
@@ -328,6 +361,11 @@ export default function Home() {
     });
   };
 
+  const handleResetFilters = () => {
+    setSelectedMonsters([]);
+    setSelectedWeaponTypes([]);
+  };
+
   // --- 최종 렌더링 (RETURN) ---
   return (
     <main 
@@ -351,6 +389,9 @@ export default function Home() {
           weaponTypeFilters={weaponTypeFilters}
           selectedWeaponTypes={selectedWeaponTypes}
           handleWeaponTypeFilterClick={handleWeaponTypeFilterClick}
+          monsterCounts={monsterCounts}
+          weaponTypeCounts={weaponTypeCounts}
+          handleResetFilters={handleResetFilters}
         /> 
         : (
         <div className="h-24 mb-8 flex justify-center items-center text-gray-500">
