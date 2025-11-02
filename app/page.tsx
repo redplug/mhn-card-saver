@@ -1,14 +1,8 @@
 'use client'; 
 
 import { useState, useEffect, FormEvent, useCallback } from 'react';
-import Card from '@/components/Card';
-
-export type CardType = {
-  id: number;
-  url: string;
-  screenshot: string;
-  name: string;
-};
+// FIX: 경로 별칭 (@/) 대신 상대 경로 (../components/Card)를 사용하여 빌드 오류를 해결
+import Card, { CardType } from '../components/Card'; 
 
 // --- [분리] ClientForm에 필요한 Props 정의 ---
 interface ClientFormProps {
@@ -50,7 +44,7 @@ const ClientForm = ({
       </button>
     </form>
     
-    {/* 검색 입력창 (여기가 문제의 입력창입니다) */}
+    {/* 검색 입력창 */}
     <div className="mb-8">
       <input
         type="text"
@@ -70,14 +64,17 @@ export default function Home() {
   // --- 상태 관리 (STATE) ---
   const [urlInput, setUrlInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [cards, setCards] = useState<CardType[]>([]);
+  // CardType을 Card.tsx에서 가져온 정의로 사용합니다.
+  const [cards, setCards] = useState<CardType[]>([]); 
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [searchTerm, setSearchTerm] = useState(""); 
   const [isClient, setIsClient] = useState(false); // 클라이언트 렌더링 확인
 
   // --- 파생 상태 (DERIVED STATE) ---
   const filteredCards = cards.filter(card => 
-    card.name.toLowerCase().includes(searchTerm.toLowerCase())
+    card.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    // [추가] description 필드에서도 검색하도록 확장
+    card.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // --- DB 로드 (EFFECT) ---
@@ -90,9 +87,17 @@ export default function Home() {
         if (!res.ok) {
           throw new Error(`API가 에러를 반환했습니다: ${res.status}`);
         }
-        const data = await res.json();
-        setCards(data);
-        console.log(`--- [Client] loadCards: 카드 ${data.length}개 불러오기 성공.`);
+        const data: CardType[] = await res.json();
+        
+        // [수정] DB에서 불러온 데이터에 description 필드가 없을 경우 기본값 ""을 할당
+        const safeData = data.map(card => ({
+            ...card,
+            // description 필드가 없거나(DB 마이그레이션 중) null이면 ""을 할당
+            description: card.description || "", 
+        }));
+        
+        setCards(safeData);
+        console.log(`--- [Client] loadCards: 카드 ${safeData.length}개 불러오기 성공.`);
       } catch (error) {
         console.error("--- [Client] loadCards 실패:", error);
       
@@ -103,6 +108,7 @@ export default function Home() {
           errorMessage = error.message; 
         }
         
+        // 경고: Canvas 환경에서는 alert 대신 커스텀 UI를 사용하세요.
         alert(`[로드 실패] 카드 목록을 불러오는 데 실패했습니다: ${errorMessage}`);
       }
       setIsInitialLoad(false);
@@ -140,6 +146,7 @@ export default function Home() {
           errorMessage = error.message; 
         }
         
+        // 경고: Canvas 환경에서는 alert 대신 커스텀 UI를 사용하세요.
         alert(`[저장 실패] 카드 목록을 저장하는 데 실패했습니다: ${errorMessage}`);
       }
     }
@@ -156,6 +163,7 @@ export default function Home() {
     // 1. 중복 체크 로직
     const isDuplicate = cards.some(card => card.url === urlInput);
     if (isDuplicate) {
+      // 경고: Canvas 환경에서는 alert 대신 커스텀 UI를 사용하세요.
       alert("이미 추가된 빌드 주소입니다! 중복된 주소는 추가할 수 없습니다.");
       setUrlInput("");
       return;
@@ -176,11 +184,13 @@ export default function Home() {
             id: Date.now(),
             url: urlInput,
             screenshot: `data:image/png;base64,${errorData.debugScreenshotBase64}`,
-            name: "⚠️ 스크린샷 실패 (디버그 화면)"
+            name: "⚠️ 스크린샷 실패 (디버그 화면)",
+            description: "스크린샷 오류가 발생했습니다. 디버그 화면을 확인하세요." // description 추가
           };
           // [핵심] 함수형 업데이트 사용
           setCards(prevCards => [errorCard, ...prevCards]); 
           setIsLoading(false);
+          // 경고: Canvas 환경에서는 alert 대신 커스텀 UI를 사용하세요.
           alert(`오류: 스크린샷 영역을 찾지 못했습니다. 무엇이 보이는지 디버그 카드를 확인해주세요.`);
           return;
         }
@@ -197,6 +207,7 @@ export default function Home() {
           url: urlInput,
           screenshot: `data:image/png;base64,${data.screenshotBase64}`, 
           name: "새 빌드",
+          description: "", // [추가] 새로운 카드를 만들 때 description 초기화
         };
         // [핵심] 함수형 업데이트 사용
         setCards(prevCards => [newCard, ...prevCards]); 
@@ -206,6 +217,7 @@ export default function Home() {
     } catch (error) {
       console.error(error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      // 경고: Canvas 환경에서는 alert 대신 커스텀 UI를 사용하세요.
       alert("오류가 발생했습니다: " + errorMessage);
     }
 
@@ -214,6 +226,7 @@ export default function Home() {
 
   // --- 카드 수정/삭제 핸들러 ---
   const handleDeleteCard = useCallback((id: number) => {
+    // 경고: Canvas 환경에서는 window.confirm/alert 사용이 권장되지 않습니다.
     const isConfirmed = window.confirm(`정말로 이 빌드를 삭제하시겠습니까?`);
     if (isConfirmed) {
       // [핵심] 함수형 업데이트 사용
@@ -227,7 +240,14 @@ export default function Home() {
       card.id === id ? { ...card, name: newName } : card
     ));
   }, []); // 의존성 없음
-  
+
+  // [새로 추가] 설명 변경 핸들러
+  const handleDescriptionChange = useCallback((id: number, newDescription: string) => {
+    setCards(prevCards => prevCards.map(card => 
+      card.id === id ? { ...card, description: newDescription } : card
+    ));
+  }, []);
+
   // --- 최종 렌더링 (RETURN) ---
   return (
     <main 
@@ -269,6 +289,7 @@ export default function Home() {
               card={card}
               onDelete={handleDeleteCard}
               onNameChange={handleNameChange}
+              onDescriptionChange={handleDescriptionChange} // [추가] 새로운 핸들러 전달
             />
           ))
         ) : (
