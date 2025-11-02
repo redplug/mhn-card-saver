@@ -1,19 +1,20 @@
-// components/Card.tsx
-
 import { useState, useCallback } from 'react'; 
-// import { CardProps } from '@/types'; 
+// CardType 및 CardProps는 이제 이 파일 내에서 정의하고 export 합니다.
 
 export type CardType = {
   id: number;
   url: string;
   screenshot: string;
   name: string;
+  description: string; // 새로운 필드: 여러 줄 설명
 };
 
 interface CardProps {
   card: CardType;
   onDelete: (id: number) => void;
   onNameChange: (id: number, newName: string) => void;
+  // 새로운 핸들러: 설명 변경 시 호출
+  onDescriptionChange: (id: number, newDescription: string) => void; 
 }
 
 // 아이콘 정의는 생략 (기존 코드와 동일)
@@ -24,9 +25,16 @@ const ArrowRightIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
 );
 
-export default function Card({ card, onDelete, onNameChange }: CardProps) {
-  // 삭제 확인 팝업 로직
+export default function Card({ card, onDelete, onNameChange, onDescriptionChange }: CardProps) {
+  // FIX: card prop이 정의되지 않았을 경우 렌더링을 중단하여 TypeError를 방지합니다.
+  if (!card) {
+    console.error("Card component received undefined card prop.");
+    return null;
+  }
+  
+  // 삭제 확인 팝업 로직 (alert 대신 커스텀 UI를 사용하는 것이 권장되지만, 기존 로직 유지)
   const handleDeleteClick = () => {
+    // 경고: Canvas 환경에서는 window.confirm/alert 사용이 권장되지 않습니다.
     const isConfirmed = window.confirm(
       `"${card.name}" 빌드를 정말로 삭제하시겠습니까?`
     );
@@ -47,11 +55,12 @@ export default function Card({ card, onDelete, onNameChange }: CardProps) {
       {/* 1. [수정] 패딩 p-5 -> p-3으로 축소, space-y-4 -> space-y-2로 축소 */}
       <div className="p-3 flex-grow space-y-2"> 
         
-        {/* 1. 빌드명 입력 텍스트 박스 */}
+        {/* 1-1. 빌드명 입력 텍스트 박스 */}
         <input
           type="text"
           value={card.name}
           onChange={(e) => onNameChange(card.id, e.target.value)}
+          placeholder="빌드 이름"
           className="
             w-full text-base font-semibold border-b border-gray-300 p-1 rounded-sm
             text-gray-800 focus:outline-none focus:border-blue-500
@@ -59,9 +68,23 @@ export default function Card({ card, onDelete, onNameChange }: CardProps) {
           aria-label="빌드 이름"
         />
 
+        {/* 1-2. [새로 추가] 여러 줄 설명 기록 영역 (Textarea) */}
+        <textarea
+          value={card.description}
+          onChange={(e) => onDescriptionChange(card.id, e.target.value)}
+          placeholder="여기에 빌드에 대한 여러 줄 설명을 기록하세요."
+          rows={3} // 표시될 기본 행 수 설정
+          className="
+            w-full text-sm border border-gray-300 p-2 rounded-md resize-none
+            text-gray-600 focus:outline-none focus:border-indigo-500
+            transition-shadow
+          "
+          aria-label="빌드 설명"
+        />
+
         {/* 2. 링크 및 버튼 그룹 */}
         {/* [수정] mt-4 -> mt-2로 축소 */}
-        <div className="flex justify-between items-center mt-2"> 
+        <div className="flex justify-between items-center pt-2 border-t border-gray-100"> 
           
           {/* 2-1. 빌드 페이지 이동 링크 */}
           <a
