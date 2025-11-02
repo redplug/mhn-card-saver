@@ -1,3 +1,5 @@
+import { useState, useEffect, FormEvent, useCallback, useRef } from 'react';
+
 // CardType 및 CardProps는 이제 이 파일 내에서 정의하고 export 합니다.
 
 export type CardType = {
@@ -49,6 +51,15 @@ export default function Card({ card, onDelete, onNameChange, onDescriptionChange
       onDelete(card.id);
     }
   };
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'; // Reset height to recalculate
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+    }
+  }, [card.description]); // Re-run when description changes
 
   return (
     <div className="
@@ -120,11 +131,12 @@ export default function Card({ card, onDelete, onNameChange, onDescriptionChange
 
         {/* 2-2. [새로 추가] 여러 줄 설명 기록 영역 (Textarea) */}
         <textarea
+          ref={textareaRef}
           value={card.description}
           onChange={(e) => onDescriptionChange(card.id, e.target.value)}
           placeholder="여기에 빌드에 대한 여러 줄 설명을 기록하세요."
-          rows={3} // 표시될 기본 행 수 설정
-          className="w-full text-sm border border-gray-300 p-2 rounded-md resize-none text-gray-600 focus:outline-none focus:border-indigo-500 transition-shadow"
+          rows={2} // 표시될 기본 행 수 설정
+          className="w-full text-sm border border-gray-300 p-2 rounded-md resize-y max-h-48 text-gray-600 focus:outline-none focus:border-indigo-500 transition-shadow"
           aria-label="빌드 설명"
         />
       </div>

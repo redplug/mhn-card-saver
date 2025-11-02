@@ -6,12 +6,7 @@ import Card, { CardType } from '../components/Card';
 
 // --- [분리] ClientForm에 필요한 Props 정의 ---
 interface ClientFormProps {
-  urlInput: string;
   searchTerm: string;
-  isLoading: boolean;
-  // 핸들러 함수들은 useCallback으로 감싸져 props로 전달됩니다.
-  handleAddCard: (e: React.FormEvent<HTMLFormElement>) => void;
-  setUrlInput: (value: string) => void;
   setSearchTerm: (value: string) => void;
   monsterFilters: string[];
   selectedMonsters: string[];
@@ -26,11 +21,7 @@ interface ClientFormProps {
 
 // --- [분리] ClientForm 컴포넌트 정의 (Home 함수 밖으로 이동) ---
 const ClientForm = ({
-  urlInput,
   searchTerm,
-  isLoading,
-  handleAddCard,
-  setUrlInput,
   setSearchTerm,
   monsterFilters,
   selectedMonsters,
@@ -43,25 +34,6 @@ const ClientForm = ({
   handleResetFilters,
 }: ClientFormProps) => (
   <>
-    {/* URL 입력 폼 */}
-    <form onSubmit={handleAddCard} className="flex gap-2 mb-4">
-      <input
-        type="url"
-        value={urlInput}
-        onChange={(e) => setUrlInput(e.target.value)}
-        placeholder="https://mhn.quest 빌드 링크를 붙여넣으세요"
-        className="flex-grow border p-3 rounded-lg"
-        required
-      />
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-600 disabled:bg-gray-400"
-      >
-        {isLoading ? '생성 중...' : '추가'}
-      </button>
-    </form>
-    
     {/* 검색 입력창 */}
     <div className="mb-4">
       <input
@@ -70,7 +42,7 @@ const ClientForm = ({
         // [핵심] 상태 setter 함수를 직접 사용하여 단순화 (불필요한 로직 제거)
         onChange={(e) => setSearchTerm(e.target.value)} 
         placeholder="빌드명으로 검색하세요..."
-        className="w-full border p-3 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+        className="w-full border p-2 rounded-lg focus:ring-blue-500 focus:border-blue-500"
       />
     </div>
 
@@ -372,16 +344,31 @@ export default function Home() {
       className="container mx-auto p-4 max-w-7xl"
       suppressHydrationWarning={true}
     >
-      <h1 className="text-3xl font-bold mb-6 text-center">MHNow Build</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-xl font-bold mr-4">MHNB</h1>
+        <form onSubmit={handleAddCard} className="flex gap-2 flex-grow">
+          <input
+            type="url"
+            value={urlInput}
+            onChange={(e) => setUrlInput(e.target.value)}
+            placeholder="https://mhn.quest 빌드 링크를 붙여넣으세요"
+            className="flex-grow border p-2 rounded-lg"
+            required
+          />
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600 disabled:bg-gray-400"
+          >
+            {isLoading ? '생성 중...' : '추가'}
+          </button>
+        </form>
+      </div>
 
       {/* 1. isClient 상태에 따라 폼을 조건부 렌더링 */}
       {isClient ? 
         <ClientForm 
-          urlInput={urlInput}
           searchTerm={searchTerm}
-          isLoading={isLoading}
-          handleAddCard={handleAddCard}
-          setUrlInput={setUrlInput}
           setSearchTerm={setSearchTerm}
           monsterFilters={monsterFilters}
           selectedMonsters={selectedMonsters}
