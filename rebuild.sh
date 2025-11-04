@@ -53,8 +53,8 @@ docker run -d --name "$REDIS_NAME" \
 # Redis health 대기 (최대 60초)
 echo "Waiting for Redis to be healthy..."
 for i in $(seq 1 60); do
-  status=$(docker inspect --format='{{.State.Health.Status}}' "$REDIS_NAME" 2>/dev/null || echo "none")
-  if [ "$status" = "healthy" ]; then
+  redis_status=$(docker inspect --format='{{.State.Health.Status}}' "$REDIS_NAME" 2>/dev/null || echo "none")
+  if [ "$redis_status" = "healthy" ]; then
     echo "Redis is healthy."
     break
   fi
