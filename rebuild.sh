@@ -50,19 +50,6 @@ docker run -d --name "$REDIS_NAME" \
     --restart unless-stopped \
     redis:alpine redis-server --save 1 1 --dir /data
 
-# Redis health 대기 (최대 60초)
-echo "Waiting for Redis to be healthy..."
-for i in $(seq 1 60); do
-  redis_status=$(docker inspect --format='{{.State.Health.Status}}' "$REDIS_NAME" 2>/dev/null || echo "none")
-  if [ "$redis_status" = "healthy" ]; then
-    echo "Redis is healthy."
-    break
-  fi
-  sleep 1
-  if [ "$i" -eq 60 ]; then
-    echo "Redis health check timed out."; exit 1
-  fi
-done
 
 # 앱 기동
 docker run -d --name "$APP_NAME" \
