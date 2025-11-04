@@ -5,7 +5,7 @@ VOLUME_NAME="mhn-redis-data" # 백업하려는 Docker 볼륨 이름
 BACKUP_DIR="/backup/mhnb_docker_volume" # 백업 파일을 저장할 호스트 경로
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 BACKUP_FILE="${BACKUP_DIR}/${VOLUME_NAME}_${TIMESTAMP}.tar.gz"
-DAYS_TO_KEEP=30 # 보관 기간 (7일)
+DAYS_TO_KEEP=100 # 보관 기간 (7일)
 
 echo "--- [$(date)] $VOLUME_NAME 백업 시작 ---"
 
