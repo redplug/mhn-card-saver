@@ -156,6 +156,8 @@ export default function Home() {
         
         setCards(safeData);
         console.log(`--- [Client] loadCards: 카드 ${safeData.length}개 불러오기 성공.`);
+        // 초기 로드 완료는 성공 시에만 표시하여 빈 배열 저장 방지
+        setIsInitialLoad(false);
       } catch (error) {
         console.error("--- [Client] loadCards 실패:", error);
       
@@ -168,8 +170,8 @@ export default function Home() {
         
         // 경고: Canvas 환경에서는 alert 대신 커스텀 UI를 사용하세요.
         alert(`[로드 실패] 카드 목록을 불러오는 데 실패했습니다: ${errorMessage}`);
+        // 실패 시에는 초기 로드 상태를 유지하여 저장 이펙트가 실행되지 않게 함
       }
-      setIsInitialLoad(false);
     }
     
     loadCards();

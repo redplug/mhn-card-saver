@@ -35,6 +35,7 @@ export async function GET() {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error('--- [API] GET: 카드 불러오기 실패!', errorMessage);
+    // 실패 시 에러를 반환하여 클라이언트가 기존 상태를 유지하도록 합니다.
     return NextResponse.json({ error: 'Failed to fetch data', details: errorMessage }, { status: 500 });
   }
 }

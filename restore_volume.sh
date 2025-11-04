@@ -53,6 +53,11 @@ docker run --rm \
     rm -rf /volume/*; \
     echo '압축 해제 중...'; \
     tar xzf /backup/\"$BACKUP_BASENAME\" -C /volume; \
+    echo '권한 정리 시도 (여러 UID/GID로 시도)...'; \
+    chown -R 1000:1000 /volume 2>/dev/null || true; \
+    chown -R 999:999 /volume 2>/dev/null || true; \
+    chown -R 100:101 /volume 2>/dev/null || true; \
+    chmod -R u+rwX,go+rX /volume 2>/dev/null || true; \
     echo '복구 완료' \
   "
 
@@ -69,6 +74,19 @@ if [ -n "$CONTAINER_NAME" ]; then
   docker start "$CONTAINER_NAME" || {
     echo "경고: 컨테이너 시작 실패 - 수동으로 확인하세요."
   }
+
+  # 헬스체크: redis-cli 가용 시 PING 확인 (최대 30초 대기)
+  echo "Redis 헬스체크: PING 대기 (최대 30초)"
+  for i in $(seq 1 30); do
+    if docker exec "$CONTAINER_NAME" sh -lc 'command -v redis-cli >/dev/null 2>&1 && redis-cli -h 127.0.0.1 -p ${REDIS_PORT:-6379} ping 2>/dev/null | grep -q PONG'; then
+      echo "✅ Redis PONG 확인"
+      break
+    fi
+    sleep 1
+    if [ "$i" -eq 30 ]; then
+      echo "⚠️  Redis 헬스체크 실패(30초 초과). redis-cli 미설치 또는 포트 상이 가능."
+    fi
+  done
 fi
 
 echo "--- 복구 작업 종료 ---"
