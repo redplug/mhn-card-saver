@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -euo pipefail
+# set -euo pipefail
 
 ENV_ARG=${1:-prod} # prod | dev
 
