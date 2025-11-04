@@ -53,6 +53,7 @@ export default function Card({ card, onDelete, onNameChange, onDescriptionChange
   };
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -69,6 +70,11 @@ export default function Card({ card, onDelete, onNameChange, onDescriptionChange
       transition-all duration-300 ease-in-out
       hover:shadow-lg
     ">
+      {copied && (
+        <div className="absolute top-2 right-2 bg-black/75 text-white text-xs px-2 py-1 rounded-md shadow">
+          주소가 복사되었습니다
+        </div>
+      )}
       
       {/* 1. [수정] 패딩 p-5 -> p-3으로 축소, space-y-4 -> space-y-2로 축소 */}
       <div className="p-3 space-y-2 flex-shrink-0"> 
@@ -127,6 +133,24 @@ export default function Card({ card, onDelete, onNameChange, onDescriptionChange
             <ArrowRightIcon className="h-4 w-4"/>
             <span>이동</span>
           </a>
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(card.url);
+                console.log('URL copied:', card.url);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 1200);
+              } catch (e) {
+                console.error('Failed to copy URL', e);
+              }
+            }}
+            className="text-xs px-2 py-1 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100"
+            aria-label={`${card.name} 빌드 주소 복사`}
+            title="주소 복사"
+          >
+            복사
+          </button>
         </div>
 
         {/* 2-2. [새로 추가] 여러 줄 설명 기록 영역 (Textarea) */}
@@ -135,7 +159,7 @@ export default function Card({ card, onDelete, onNameChange, onDescriptionChange
           value={card.description}
           onChange={(e) => onDescriptionChange(card.id, e.target.value)}
           placeholder="여기에 빌드에 대한 여러 줄 설명을 기록하세요."
-          rows={2} // 표시될 기본 행 수 설정
+          rows={3} // 표시될 기본 행 수 설정
           className="w-full text-sm border border-gray-300 p-2 rounded-md resize-y max-h-48 text-gray-600 focus:outline-none focus:border-indigo-500 transition-shadow"
           aria-label="빌드 설명"
         />

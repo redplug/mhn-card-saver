@@ -1,19 +1,48 @@
+#!/bin/bash
+
+set -euo pipefail
+
+ENV_ARG=${1:-prod} # prod | dev
+
+if [ "$ENV_ARG" = "prod" ] || [ "$ENV_ARG" = "main" ]; then
+  BRANCH="main"
+  APP_NAME="mhn-app"
+  REDIS_NAME="mhn-redis"
+  PORT=3020
+  IMAGE_TAG="redplug/mhn-saver:latest"
+  VOLUME_NAME="mhn-redis-data"
+elif [ "$ENV_ARG" = "dev" ]; then
+  BRANCH="dev"
+  APP_NAME="mhn-app-dev"
+  REDIS_NAME="mhn-redis-dev"
+  PORT=3021
+  IMAGE_TAG="redplug/mhn-saver:dev"
+  VOLUME_NAME="mhn-redis-data-dev"
+else
+  echo "Usage: $0 [prod|dev]"; exit 1
+fi
+
+echo "--- Deploying ENV=$ENV_ARG (branch=$BRANCH, app=$APP_NAME, redis=$REDIS_NAME, port=$PORT) ---"
+
 cd /home/redplug/mhn-card-saver
-git pull
-docker build -t redplug/mhn-saver:latest .
+git fetch --all --prune
+git checkout "$BRANCH"
+git pull origin "$BRANCH"
+
+docker build -t "$IMAGE_TAG" .
 
 # 네트워크 보장
 docker network inspect mhn-network >/dev/null 2>&1 || docker network create mhn-network
 
 # 기존 컨테이너 정리
-docker rm -f mhn-app >/dev/null 2>&1 || true
-docker rm -f mhn-redis >/dev/null 2>&1 || true
+docker rm -f "$APP_NAME" >/dev/null 2>&1 || true
+docker rm -f "$REDIS_NAME" >/dev/null 2>&1 || true
 
 # Redis 기동 (alias=db, healthcheck 포함)
-docker run -d --name mhn-redis \
+docker run -d --name "$REDIS_NAME" \
     --network mhn-network \
     --network-alias db \
-    -v mhn-redis-data:/data \
+    -v "$VOLUME_NAME":/data \
     --health-cmd "redis-cli ping || exit 1" \
     --health-interval=5s \
     --health-timeout=3s \
@@ -24,7 +53,7 @@ docker run -d --name mhn-redis \
 # Redis health 대기 (최대 60초)
 echo "Waiting for Redis to be healthy..."
 for i in $(seq 1 60); do
-  status=$(docker inspect --format='{{.State.Health.Status}}' mhn-redis 2>/dev/null || echo "none")
+  status=$(docker inspect --format='{{.State.Health.Status}}' "$REDIS_NAME" 2>/dev/null || echo "none")
   if [ "$status" = "healthy" ]; then
     echo "Redis is healthy."
     break
@@ -36,9 +65,11 @@ for i in $(seq 1 60); do
 done
 
 # 앱 기동
-docker run -d --name mhn-app \
-    -p 3020:3000 \
+docker run -d --name "$APP_NAME" \
+    -p $PORT:3000 \
     --network mhn-network \
     --env KV_URL="redis://db:6379" \
     --restart unless-stopped \
-    redplug/mhn-saver:latest
+    "$IMAGE_TAG"
+
+echo "--- Done. ENV=$ENV_ARG running on port $PORT ---"
