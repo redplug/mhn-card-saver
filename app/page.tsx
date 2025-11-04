@@ -135,12 +135,16 @@ export default function Home() {
     setIsClient(true);
     async function loadCards() {
       console.log("--- [Client] loadCards: 카드 불러오기 시작...");
-      try {
-        const res = await fetch('/api/cards');
-        if (!res.ok) {
-          throw new Error(`API가 에러를 반환했습니다: ${res.status}`);
-        }
-        const data: CardType[] = await res.json();
+      const maxAttempts = 3;
+      const backoffs = [300, 900, 1500];
+      let lastError: unknown = null;
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+          const res = await fetch('/api/cards', { cache: 'no-store' });
+          if (!res.ok) {
+            throw new Error(`API가 에러를 반환했습니다: ${res.status}`);
+          }
+          const data: CardType[] = await res.json();
         
         // [수정] DB에서 불러온 데이터에 description 필드가 없을 경우 기본값 ""을 할당
         // createdAt이 없을 경우 id를 사용 (기존 데이터 호환성)
@@ -158,20 +162,29 @@ export default function Home() {
         console.log(`--- [Client] loadCards: 카드 ${safeData.length}개 불러오기 성공.`);
         // 초기 로드 완료는 성공 시에만 표시하여 빈 배열 저장 방지
         setIsInitialLoad(false);
-      } catch (error) {
-        console.error("--- [Client] loadCards 실패:", error);
-      
-        let errorMessage = "알 수 없는 오류가 발생했습니다."; // Default message
-
-        if (error instanceof Error) {
-          // Now TypeScript knows 'error' has a 'message' property
-          errorMessage = error.message; 
+          return; // 성공 시 함수 종료
+        } catch (err) {
+          lastError = err;
+          const ts = new Date().toISOString();
+          const message = err instanceof Error ? err.message : String(err);
+          console.warn(`[loadCards][${ts}] 실패 (시도 ${attempt}/${maxAttempts}): ${message}`);
+          if (attempt < maxAttempts) {
+            const waitMs = backoffs[attempt - 1] || 1000;
+            console.info(`[loadCards] ${waitMs}ms 후 재시도 예정...`);
+            await new Promise(r => setTimeout(r, waitMs));
+            continue;
+          }
         }
-        
-        // 경고: Canvas 환경에서는 alert 대신 커스텀 UI를 사용하세요.
-        alert(`[로드 실패] 카드 목록을 불러오는 데 실패했습니다: ${errorMessage}`);
-        // 실패 시에는 초기 로드 상태를 유지하여 저장 이펙트가 실행되지 않게 함
       }
+      // 모든 재시도 실패
+      const tsFinal = new Date().toISOString();
+      console.error(`[loadCards][${tsFinal}] 최종 실패:`, lastError);
+      let errorMessage = "알 수 없는 오류가 발생했습니다.";
+      if (lastError instanceof Error) {
+        errorMessage = lastError.message;
+      }
+      alert(`[로드 실패] 카드 목록을 불러오는 데 실패했습니다: ${errorMessage}`);
+      // 실패 시에는 초기 로드 상태를 유지하여 저장 이펙트가 실행되지 않게 함
     }
     
     loadCards();

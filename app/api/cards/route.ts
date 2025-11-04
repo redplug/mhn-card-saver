@@ -5,7 +5,11 @@ import { NextResponse } from 'next/server';
 import IORedis from 'ioredis';
 
 // 2. [추가] 환경 변수에서 KV_URL을 가져옵니다.
-const redis = new IORedis(process.env.KV_URL || 'redis://localhost:6379');
+const redis = new IORedis(process.env.KV_URL || 'redis://localhost:6379', {
+  connectTimeout: 3000,
+  maxRetriesPerRequest: 2,
+  retryStrategy: (times) => Math.min(times * 200, 2000),
+});
 
 // 3. [추가] KV_URL이 없으면 오류를 방지하고, 있으면 Redis 객체를 TCP 모드로 생성합니다.
 //    (이 방법이 KV_REST_API_* 변수를 완전히 무시하도록 강제합니다.)
