@@ -4,6 +4,10 @@ set -euo pipefail
 
 ENV_ARG=${1:-prod} # prod | dev
 
+if [ -z "$ENV_ARG" ]; then
+  ENV_ARG="prod"
+fi
+
 if [ "$ENV_ARG" = "prod" ] || [ "$ENV_ARG" = "main" ]; then
   BRANCH="main"
   APP_NAME="mhn-app"
